@@ -1,5 +1,3 @@
-const IE_POWER_PER_HOUR = 4;
-const IE_POWER_PER_DAY = 24 * IE_POWER_PER_HOUR; // Wh per device per day
 const SAFETY_MARGIN = 1.3;
 
 export type GroupOutput = {
@@ -27,11 +25,13 @@ export function calculateBatteryOnly(
 	startDate: string,
 	endDate: string,
 	devicesPerGroup: number[],
-	batteryCapacity: number
+	batteryCapacity: number,
+	devicePowerW: number
 ): TotalOutput {
 	const lengthOfExperiment = getNumDays(startDate, endDate);
+	const powerPerDay = 24 * devicePowerW;
 	const groups: GroupOutput[] = devicesPerGroup.map((devices) => {
-		const dailyEnergyWh = devices * IE_POWER_PER_DAY * SAFETY_MARGIN;
+		const dailyEnergyWh = devices * powerPerDay * SAFETY_MARGIN;
 		const totalEnergyWh = dailyEnergyWh * lengthOfExperiment;
 		const numBatteriesNeededNoSolar = Math.ceil(totalEnergyWh / batteryCapacity);
 		return { devices, dailyEnergyWh, totalEnergyWh, numBatteriesNeededNoSolar };
@@ -53,9 +53,10 @@ export async function calculateWithSolar(
 	solarData: { average: number[]; worst: number[] },
 	numWorstDays: number,
 	panelRatingW: number,
-	numPanelsPerGroup: number[]
+	numPanelsPerGroup: number[],
+	devicePowerW: number
 ): Promise<TotalOutput> {
-	const batteriesOnly = calculateBatteryOnly(startDate, endDate, devicesPerGroup, batteryCapacity);
+	const batteriesOnly = calculateBatteryOnly(startDate, endDate, devicesPerGroup, batteryCapacity, devicePowerW);
 	const numDays = getNumDays(startDate, endDate);
 	const { average, worst } = solarData;
 
@@ -76,7 +77,8 @@ export async function calculateWithSolar(
 						panelRatingW,
 						systemEfficiency: SYSTEM_EFFICIENCY,
 						batteryCapacity,
-						batteriesWithoutSolar: group.numBatteriesNeededNoSolar
+						batteriesWithoutSolar: group.numBatteriesNeededNoSolar,
+						devicePowerW
 					});
 					worker.onmessage = (e) => {
 						resolve(e.data);

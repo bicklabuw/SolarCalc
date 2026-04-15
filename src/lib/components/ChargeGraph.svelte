@@ -22,6 +22,20 @@
 	const numHours = $derived(groups[0]?.chargeHistory.length ?? 0);
 	const numDays = $derived(Math.ceil(numHours / 24));
 
+	// Unique ID for aria attributes (based on title slug)
+	const titleSlug = $derived(title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+
+	const accessibilityDesc = $derived(
+		`Battery charge simulation over ${Math.ceil((groups[0]?.chargeHistory.length ?? 0) / 24)} day(s) for ${groups.length} group(s). ` +
+		groups.map((g, i) => {
+			const name = g.name || `Group ${i + 1}`;
+			const cap = g.numBatteries * batteryCapacityWh;
+			const minCharge = Math.min(...g.chargeHistory);
+			const minPct = cap > 0 ? ((minCharge / cap) * 100).toFixed(0) : '0';
+			return `${name}: ${g.numBatteries} battery(ies), minimum charge ${minCharge.toFixed(0)} Wh (${minPct}% of capacity)`;
+		}).join('. ') + '.'
+	);
+
 	// worst group = lowest minimum charge relative to its own capacity
 	const worstIndex = $derived(() => {
 		let worst = Infinity;
@@ -67,8 +81,12 @@
 		viewBox="0 0 {W} {H}"
 		width="100%"
 		style="display:block"
-		aria-label={title}
+		role="img"
+		aria-labelledby="chart-title-{titleSlug}"
+		aria-describedby="chart-desc-{titleSlug}"
 	>
+		<title id="chart-title-{titleSlug}">{title}</title>
+		<desc id="chart-desc-{titleSlug}">{accessibilityDesc}</desc>
 		<!-- Day boundary lines -->
 		{#each Array.from({ length: numDays + 1 }, (_, d) => d) as day}
 			{@const x = toX(day * 24)}
@@ -79,7 +97,7 @@
 		{#each yTicks() as tick}
 			{@const y = toY(tick)}
 			<line x1={PAD.left - 4} y1={y} x2={PAD.left} y2={y} stroke="#444" stroke-width="1" />
-			<text x={PAD.left - 7} y={y + 4} text-anchor="end" font-size="10" fill="#666">
+			<text x={PAD.left - 7} y={y + 4} text-anchor="end" font-size="10" fill="#999">
 				{fmtWh(tick)}
 			</text>
 		{/each}
@@ -101,7 +119,7 @@
 					y={PAD.top + chartH + 16}
 					text-anchor="middle"
 					font-size="10"
-					fill="#666"
+					fill="#999"
 				>
 					Day {day + 1}
 				</text>
@@ -132,7 +150,7 @@
 			y={PAD.top + chartH / 2}
 			text-anchor="middle"
 			font-size="10"
-			fill="#555"
+			fill="#888"
 			transform="rotate(-90, 12, {PAD.top + chartH / 2})"
 		>
 			Charge (Wh)

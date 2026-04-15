@@ -52,7 +52,7 @@
 			{#if !confirmRemove}
 				<button
 					onclick={() => (confirmRemove = true)}
-					class="text-[#555] hover:text-[#e8e8e8] transition-colors"
+					class="text-[#888] hover:text-[#e8e8e8] transition-colors"
 				>
 					Remove
 				</button>

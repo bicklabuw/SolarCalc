@@ -16,6 +16,8 @@
 	let startDate = $state('');
 	let endDate = $state('');
 
+	let devicePowerW = $state(4);
+
 	const BATTERY_PRESETS = [200, 500, 1000, 2000, 2500];
 	let batteryPreset = $state(1000);
 	let batteryCustom = $state('');
@@ -147,8 +149,8 @@
 			if (effectivePanel <= 0) errs.panel = 'Panel rating must be greater than 0.';
 			if (groups.some((g) => g.panels < 1)) errs.panels = 'Each group needs at least 1 panel.';
 			const days = totalDays();
-			if (numWorstDays < 1 || numWorstDays > days)
-				errs.worstDays = `Must be between 1 and ${days} (total days).`;
+			if (numWorstDays < 0 || numWorstDays > days)
+				errs.worstDays = `Must be between 0 and ${days} (total days).`;
 		}
 
 		errors = errs;
@@ -165,7 +167,7 @@
 		const devicesPerGroup = groups.map((g) => g.devices);
 
 		if (mode === 'battery') {
-			batteryResult = calculateBatteryOnly(start, end, devicesPerGroup, effectiveBattery);
+			batteryResult = calculateBatteryOnly(start, end, devicesPerGroup, effectiveBattery, devicePowerW);
 			status = 'done';
 			return;
 		}
@@ -185,12 +187,12 @@
 			statusMsg = 'Running simulation…';
 			committedWorstDays = numWorstDays;
 			[solarResultN, solarResultAll] = await Promise.all([
-				calculateWithSolar(start, end, devicesPerGroup, effectiveBattery, solarData, numWorstDays, effectivePanel, panels),
-				calculateWithSolar(start, end, devicesPerGroup, effectiveBattery, solarData, days, effectivePanel, panels)
+				calculateWithSolar(start, end, devicesPerGroup, effectiveBattery, solarData, numWorstDays, effectivePanel, panels, devicePowerW),
+				calculateWithSolar(start, end, devicesPerGroup, effectiveBattery, solarData, days, effectivePanel, panels, devicePowerW)
 			]);
 
 			// Keep battery-only for "reduction vs battery-only" comparison
-			batteryResult = calculateBatteryOnly(start, end, devicesPerGroup, effectiveBattery);
+			batteryResult = calculateBatteryOnly(start, end, devicesPerGroup, effectiveBattery, devicePowerW);
 
 			status = 'done';
 			statusMsg = '';
@@ -217,12 +219,12 @@
 		<!-- Header -->
 		<div>
 			<h1 class="text-lg font-semibold tracking-wide text-[#e8e8e8]">Solar / Battery Calculator</h1>
-			<p class="mt-1 text-sm text-[#555]">Power planning for Insect Eavesdropper field experiments.</p>
+			<p class="mt-1 text-sm text-[#e8e8e8]">Power planning for Insect Eavesdropper field experiments.</p>
 		</div>
 
 		<!-- ── 1. Experiment Parameters ───────────────────────────────────────── -->
 		<section class="space-y-4">
-			<h2 class="text-xs font-medium uppercase tracking-widest text-[#555]">Experiment Parameters</h2>
+			<h2 class="text-xs font-medium uppercase tracking-widest text-[#e8e8e8]">Experiment Parameters</h2>
 
 			<div class="grid grid-cols-2 gap-4">
 				<div>
@@ -280,12 +282,30 @@
 				{/if}
 				{#if errors.battery}<p class="mt-0.5 text-xs text-red-400">{errors.battery}</p>{/if}
 			</div>
+
+			<div>
+				<label class="block text-xs text-[#aaa]" for="devicePowerW">Device power draw (W per device)</label>
+				<input
+					id="devicePowerW"
+					type="number"
+					bind:value={devicePowerW}
+					min="0.1"
+					step="0.1"
+					class="mt-1 w-32 rounded-sm border border-[#333] bg-[#1a1a1a] px-3 py-1.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
+				/>
+				<p class="mt-0.5 text-xs text-[#888]">~{(devicePowerW * 24).toFixed(0)} Wh/day per device</p>
+			</div>
 		</section>
 
 		<!-- ── 2. Device Groups ───────────────────────────────────────────────── -->
 		<section class="space-y-3">
-			<h2 class="text-xs font-medium uppercase tracking-widest text-[#555]">Device Groups</h2>
-			<p class="text-xs text-[#555]">Each group has its own battery. IE devices draw 4 W continuously (~100 Wh/day each).</p>
+			<h2 class="text-xs font-medium uppercase tracking-widest text-[#e8e8e8]">Device Groups</h2>
+			<p class="text-xs text-[#aaa]">Each group has its own battery. Devices draw {devicePowerW} W continuously (~{(devicePowerW * 24).toFixed(0)} Wh/day each).</p>
+			{#if mode === 'solar'}
+				<p class="rounded-sm border border-[#f59e0b]/30 bg-[#f59e0b]/5 px-3 py-2 text-xs text-[#f59e0b]">
+					Make sure to set the number of solar panels for each group below.
+				</p>
+			{/if}
 
 			{#if errors.groups}
 				<p class="text-xs text-red-400">{errors.groups}</p>
@@ -309,7 +329,7 @@
 
 			<button
 				onclick={() => groups.push({ name: '', devices: 4, panels: 1 })}
-				class="text-sm text-[#555] hover:text-[#e8e8e8] transition-colors"
+				class="text-sm text-[#888] hover:text-[#e8e8e8] transition-colors"
 			>
 				+ Add Group
 			</button>
@@ -317,7 +337,7 @@
 
 		<!-- ── 3. Mode Buttons ────────────────────────────────────────────────── -->
 		<section class="space-y-3">
-			<h2 class="text-xs font-medium uppercase tracking-widest text-[#555]">Mode</h2>
+			<h2 class="text-xs font-medium uppercase tracking-widest text-[#e8e8e8]">Mode</h2>
 
 			<div class="flex gap-3">
 				<button
@@ -342,7 +362,7 @@
 				<p class="text-sm text-[#888]">
 					Switching modes will clear your current results.
 					<button onclick={() => applyMode(pendingMode!)} class="ml-1 text-[#f59e0b] hover:underline">Confirm</button>
-					<button onclick={() => (pendingMode = null)} class="ml-1 text-[#555] hover:text-[#e8e8e8]">Cancel</button>
+					<button onclick={() => (pendingMode = null)} class="ml-1 text-[#888] hover:text-[#e8e8e8]">Cancel</button>
 				</p>
 			{/if}
 		</section>
@@ -350,7 +370,7 @@
 		<!-- ── 4. Solar Inputs ────────────────────────────────────────────────── -->
 		{#if mode === 'solar'}
 			<section class="space-y-4">
-				<h2 class="text-xs font-medium uppercase tracking-widest text-[#555]">Solar Parameters</h2>
+				<h2 class="text-xs font-medium uppercase tracking-widest text-[#e8e8e8]">Solar Parameters</h2>
 
 				<div class="grid grid-cols-2 gap-4">
 					<div>
@@ -389,13 +409,13 @@
 				<div>
 					<label class="block text-xs text-[#888]" for="worstDays">
 						Number of worst days (N)
-						<span class="ml-1 text-[#444]">— appended at end of simulation as worst-case days</span>
+						<span class="ml-1 text-[#777]">— appended at end of simulation as worst-case days</span>
 					</label>
 					<input
 						id="worstDays"
 						type="number"
 						bind:value={numWorstDays}
-						min="1"
+						min="0"
 						class="mt-1 w-24 rounded-sm border border-[#333] bg-[#1a1a1a] px-3 py-1.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
 					/>
 					{#if errors.worstDays}<p class="mt-0.5 text-xs text-red-400">{errors.worstDays}</p>{/if}
@@ -457,10 +477,10 @@
 		<!-- ── 6. Results ─────────────────────────────────────────────────────── -->
 		{#if mode === 'battery' && batteryResult}
 			<section class="space-y-4 rounded-sm border border-[#2a2a2a] bg-[#1a1a1a] p-4">
-				<h2 class="text-xs font-medium uppercase tracking-widest text-[#555]">Results — Battery Only</h2>
+				<h2 class="text-xs font-medium uppercase tracking-widest text-[#888]">Results — Battery Only</h2>
 
 				<div>
-					<p class="mb-2 text-xs text-[#666]">Batteries required per group</p>
+					<p class="mb-2 text-xs text-[#999]">Batteries required per group</p>
 					<ResultsTable
 						mode="battery"
 						groups={batteryResult.groups.map((g, i) => ({
@@ -470,7 +490,7 @@
 					/>
 				</div>
 
-				<div class="border-t border-[#2a2a2a] pt-3 text-sm text-[#666]">
+				<div class="border-t border-[#2a2a2a] pt-3 text-sm text-[#999]">
 					<div class="flex justify-between">
 						<span>Daily energy use</span>
 						<span class="font-mono text-[#e8e8e8]">{batteryResult.powerPerDay.toFixed(0)} Wh</span>
@@ -485,10 +505,10 @@
 
 		{#if mode === 'solar' && solarResultN && solarResultAll && batteryResult}
 			<section class="space-y-6 rounded-sm border border-[#2a2a2a] bg-[#1a1a1a] p-4">
-				<h2 class="text-xs font-medium uppercase tracking-widest text-[#555]">Results — Battery + Solar</h2>
+				<h2 class="text-xs font-medium uppercase tracking-widest text-[#888]">Results — Battery + Solar</h2>
 
 				<div>
-					<p class="mb-2 text-xs text-[#666]">Batteries required per group</p>
+					<p class="mb-2 text-xs text-[#999]">Batteries required per group</p>
 					<ResultsTable
 						mode="solar"
 						{committedWorstDays}
@@ -528,40 +548,40 @@
 		<section class="border-t border-[#2a2a2a] pt-4">
 			<button
 				onclick={() => (methodologyOpen = !methodologyOpen)}
-				class="flex w-full items-center gap-2 text-left text-sm text-[#555] hover:text-[#888] transition-colors"
+				class="flex w-full items-center gap-2 text-left text-sm text-[#888] hover:text-[#888] transition-colors"
 			>
 				<span class="font-mono text-xs">{methodologyOpen ? '▼' : '▶'}</span>
 				How is this calculated?
 			</button>
 
 			{#if methodologyOpen}
-				<div class="mt-4 space-y-3 text-sm text-[#777] leading-relaxed">
+				<div class="mt-4 space-y-3 text-sm text-[#888] leading-relaxed">
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#555]">Solar irradiance data</p>
-						<p>Hourly irradiance (kWh/m²) is fetched from the NASA POWER API using the ALLSKY_SFC_SW_DWN parameter, over the same seasonal date range for the years 2022–2024.</p>
+						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">Solar irradiance data</p>
+						<p>Hourly irradiance (kWh/m²) is fetched from the NASA POWER API using the ALLSKY_SFC_SW_DWN parameter, over the same seasonal date range for the years 2023–2025.</p>
 					</div>
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#555]">Average vs worst case</p>
+						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">Average vs worst case</p>
 						<p>For each hour of the day, the average profile takes the mean irradiance across all matching days and years. The worst-case profile takes the single lowest observed value for that hour.</p>
 					</div>
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#555]">Solar panel output</p>
+						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">Solar panel output</p>
 						<p>Panel output (Wh) = irradiance × panel rating × number of panels × 80% system efficiency, which accounts for wiring losses, inverter efficiency, soiling, and temperature.</p>
 					</div>
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#555]">Hour-by-hour simulation</p>
+						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">Hour-by-hour simulation</p>
 						<p>The battery charges when solar output exceeds device load and discharges otherwise. Energy beyond the battery's capacity is lost. A 30% safety margin is applied to device power draw.</p>
 					</div>
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#555]">N worst days scenario</p>
+						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">N worst days scenario</p>
 						<p>The first (total days − N) days use the average hourly profile. The final N days use the worst-case profile. Battery state carries over naturally between days.</p>
 					</div>
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#555]">All worst days scenario</p>
+						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">All worst days scenario</p>
 						<p>Every day uses the worst-case hourly profile — the maximum stress test for the system.</p>
 					</div>
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#555]">Finding the minimum batteries</p>
+						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">Finding the minimum batteries</p>
 						<p>A binary search is run over candidate battery counts. For each candidate, the full simulation is executed. The smallest count that keeps the battery from running out is used.</p>
 					</div>
 				</div>
