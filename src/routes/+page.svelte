@@ -56,8 +56,7 @@
 	let lat = $state('');
 	let long = $state('');
 	let numWorstDays = $state(3);
-	let committedWorstDays = $state(3);
-
+	let committedWorstDays = $state(3);let committedBatteryCapacity = $state<number>(effectiveBattery);
 	const PANEL_PRESETS = [40, 100, 160, 200, 220];
 	let panelPreset = $state(100);
 	let panelCustom = $state('');
@@ -186,6 +185,7 @@
 			status = 'running';
 			statusMsg = 'Running simulation…';
 			committedWorstDays = numWorstDays;
+			committedBatteryCapacity = effectiveBattery;
 			[solarResultN, solarResultAll] = await Promise.all([
 				calculateWithSolar(start, end, devicesPerGroup, effectiveBattery, solarData, numWorstDays, effectivePanel, panels, devicePowerW),
 				calculateWithSolar(start, end, devicesPerGroup, effectiveBattery, solarData, days, effectivePanel, panels, devicePowerW)
@@ -284,7 +284,10 @@
 			</div>
 
 			<div>
-				<label class="block text-xs text-[#aaa]" for="devicePowerW">Device power draw (W per device)</label>
+				<label class="block text-xs text-[#aaa]" for="devicePowerW">
+					Device power draw (W per device)
+					<span class="ml-1 text-[#777]">— Insect Eavesdropper uses 4W</span>
+				</label>
 				<input
 					id="devicePowerW"
 					type="number"
@@ -512,10 +515,10 @@
 					<ResultsTable
 						mode="solar"
 						{committedWorstDays}
-						groups={solarResultN.groups.map((g, i) => ({
+						groups={batteryResult.groups.map((g, i) => ({
 							name: groupName(i),
-							batteriesNoSolar: batteryResult!.groups[i].numBatteriesNeededNoSolar,
-							batteriesN: g.numBatteriesNeededWithSolar,
+							batteriesNoSolar: g.numBatteriesNeededNoSolar,
+							batteriesN: solarResultN!.groups[i].numBatteriesNeededWithSolar,
 							batteriesAll: solarResultAll!.groups[i].numBatteriesNeededWithSolar
 						}))}
 					/>
