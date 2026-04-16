@@ -18,6 +18,9 @@
 	const LINE_COLORS = ['#6c7eb8', '#5fa87a', '#9b7fc0', '#b87a5f', '#5fb8b3'];
 	const ACCENT = '#f59e0b';
 
+	// Maximum number of labeled day ticks on the x-axis — adjust here to change density
+	const MAX_X_LABELS = 14;
+
 	const maxCapacity = $derived(Math.max(...groups.map((g) => g.numBatteries * batteryCapacityWh), 1));
 	const numHours = $derived(groups[0]?.chargeHistory.length ?? 0);
 	const numDays = $derived(Math.ceil(numHours / 24));
@@ -64,6 +67,8 @@
 			.map((v, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(v).toFixed(1)}`)
 			.join(' ');
 	}
+
+	const xLabelStride = $derived(Math.max(1, Math.ceil(numDays / MAX_X_LABELS)));
 
 	const yTicks = $derived(() => {
 		const step = maxCapacity / 4;
@@ -113,7 +118,7 @@
 				stroke="#444"
 				stroke-width="1"
 			/>
-			{#if day < numDays}
+			{#if day < numDays && day % xLabelStride === 0}
 				<text
 					x={toX(day * 24 + 12)}
 					y={PAD.top + chartH + 16}

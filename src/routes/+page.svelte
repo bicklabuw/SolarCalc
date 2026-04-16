@@ -532,7 +532,7 @@
 							chargeHistory: g.chargeHistory!,
 							numBatteries: g.numBatteriesNeededWithSolar!
 						}))}
-						batteryCapacityWh={effectiveBattery}
+						batteryCapacityWh={committedBatteryCapacity}
 					/>
 					<ChargeGraph
 						title="Simulation — all worst days"
@@ -541,7 +541,7 @@
 							chargeHistory: g.chargeHistory!,
 							numBatteries: g.numBatteriesNeededWithSolar!
 						}))}
-						batteryCapacityWh={effectiveBattery}
+						batteryCapacityWh={committedBatteryCapacity}
 					/>
 				</div>
 			</section>
