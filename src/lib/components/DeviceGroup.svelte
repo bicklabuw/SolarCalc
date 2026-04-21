@@ -22,7 +22,7 @@
 		type="text"
 		bind:value={group.name}
 		{placeholder}
-		class="w-28 border-b border-[#333] bg-transparent text-sm text-[#e8e8e8] placeholder-[#555] focus:border-[#f59e0b] focus:outline-none"
+		class="w-28 border-b border-[#333] bg-transparent text-sm text-[#e8e8e8] placeholder-[#888] focus:border-[#f59e0b] focus:outline-none"
 	/>
 
 	<label class="flex items-center gap-1.5 text-sm text-[#888]">

@@ -219,7 +219,7 @@
 		<!-- Header -->
 		<div>
 			<h1 class="text-lg font-semibold tracking-wide text-[#e8e8e8]">Solar / Battery Calculator</h1>
-			<p class="mt-1 text-sm text-[#e8e8e8]">Power planning for Insect Eavesdropper field experiments.</p>
+			<p class="mt-1 text-sm text-[#e8e8e8]">Power planning for field experiments.</p>
 		</div>
 
 		<!-- ── 1. Experiment Parameters ───────────────────────────────────────── -->
@@ -228,7 +228,7 @@
 
 			<div class="grid grid-cols-2 gap-4">
 				<div>
-					<label class="block text-xs text-[#888]" for="startDate">Start date</label>
+					<label class="block text-xs text-[#e8e8e8]" for="startDate">Start date</label>
 					<input
 						id="startDate"
 						type="date"
@@ -238,7 +238,7 @@
 					{#if errors.startDate}<p class="mt-0.5 text-xs text-red-400">{errors.startDate}</p>{/if}
 				</div>
 				<div>
-					<label class="block text-xs text-[#888]" for="endDate">End date</label>
+					<label class="block text-xs text-[#e8e8e8]" for="endDate">End date</label>
 					<input
 						id="endDate"
 						type="date"
@@ -250,14 +250,14 @@
 			</div>
 
 			<div>
-				<p class="text-xs text-[#888]">Battery capacity (Wh)</p>
+				<p class="text-xs text-[#e8e8e8]">Battery capacity (Wh)</p>
 				<div class="mt-1 flex flex-wrap gap-1.5">
 					{#each BATTERY_PRESETS as preset}
 						<button
 							onclick={() => { batteryPreset = preset; useCustomBattery = false; }}
 							class="rounded-sm border px-3 py-1 text-sm transition-colors {!useCustomBattery && batteryPreset === preset
 								? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
-								: 'border-[#333] text-[#888] hover:border-[#555]'}"
+								: 'border-[#333] text-[#aaa] hover:border-[#555]'}"
 						>
 							{preset}
 						</button>
@@ -266,7 +266,7 @@
 						onclick={() => (useCustomBattery = true)}
 						class="rounded-sm border px-3 py-1 text-sm transition-colors {useCustomBattery
 							? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
-							: 'border-[#333] text-[#888] hover:border-[#555]'}"
+							: 'border-[#333] text-[#aaa] hover:border-[#555]'}"
 					>
 						Custom
 					</button>
@@ -284,9 +284,9 @@
 			</div>
 
 			<div>
-				<label class="block text-xs text-[#aaa]" for="devicePowerW">
+				<label class="block text-xs text-[#e8e8e8]" for="devicePowerW">
 					Device power draw (W per device)
-					<span class="ml-1 text-[#777]">— Insect Eavesdropper uses 4W</span>
+					<span class="ml-1 text-[#888]">— Insect Eavesdropper uses 4W</span>
 				</label>
 				<input
 					id="devicePowerW"
@@ -303,7 +303,7 @@
 		<!-- ── 2. Device Groups ───────────────────────────────────────────────── -->
 		<section class="space-y-3">
 			<h2 class="text-xs font-medium uppercase tracking-widest text-[#e8e8e8]">Device Groups</h2>
-			<p class="text-xs text-[#aaa]">Each group has its own battery. Devices draw {devicePowerW} W continuously (~{(devicePowerW * 24).toFixed(0)} Wh/day each).</p>
+			<p class="text-xs text-[#e8e8e8]">Each group has its own battery. Devices draw {devicePowerW} W continuously (~{(devicePowerW * 24).toFixed(0)} Wh/day each).</p>
 			{#if mode === 'solar'}
 				<p class="rounded-sm border border-[#f59e0b]/30 bg-[#f59e0b]/5 px-3 py-2 text-xs text-[#f59e0b]">
 					Make sure to set the number of solar panels for each group below.
@@ -377,7 +377,7 @@
 
 				<div class="grid grid-cols-2 gap-4">
 					<div>
-						<label class="block text-xs text-[#888]" for="lat">
+						<label class="block text-xs text-[#e8e8e8]" for="lat">
 							Latitude
 							<button onclick={useMyLocation} class="ml-2 text-[#f59e0b] hover:underline">Use my location</button>
 						</label>
@@ -392,7 +392,7 @@
 						{#if errors.lat}<p class="mt-0.5 text-xs text-red-400">{errors.lat}</p>{/if}
 					</div>
 					<div>
-						<label class="block text-xs text-[#888]" for="long">Longitude</label>
+						<label class="block text-xs text-[#e8e8e8]" for="long">Longitude</label>
 						<input
 							id="long"
 							type="number"
@@ -410,9 +410,9 @@
 				{/if}
 
 				<div>
-					<label class="block text-xs text-[#888]" for="worstDays">
+					<label class="block text-xs text-[#e8e8e8]" for="worstDays">
 						Number of worst days (N)
-						<span class="ml-1 text-[#777]">— appended at end of simulation as worst-case days</span>
+						<span class="ml-1 text-[#aaa]">— appended at end of simulation as worst-case days</span>
 					</label>
 					<input
 						id="worstDays"
@@ -425,14 +425,14 @@
 				</div>
 
 				<div>
-					<p class="text-xs text-[#888]">Panel rating (W)</p>
+					<p class="text-xs text-[#e8e8e8]">Panel rating (W)</p>
 					<div class="mt-1 flex flex-wrap gap-1.5">
 						{#each PANEL_PRESETS as preset}
 							<button
 								onclick={() => { panelPreset = preset; useCustomPanel = false; }}
 								class="rounded-sm border px-3 py-1 text-sm transition-colors {!useCustomPanel && panelPreset === preset
 									? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
-									: 'border-[#333] text-[#888] hover:border-[#555]'}"
+									: 'border-[#333] text-[#aaa] hover:border-[#555]'}"
 							>
 								{preset}W
 							</button>
@@ -441,7 +441,7 @@
 							onclick={() => (useCustomPanel = true)}
 							class="rounded-sm border px-3 py-1 text-sm transition-colors {useCustomPanel
 								? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
-								: 'border-[#333] text-[#888] hover:border-[#555]'}"
+								: 'border-[#333] text-[#aaa] hover:border-[#555]'}"
 						>
 							Custom
 						</button>

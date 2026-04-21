@@ -29,7 +29,7 @@
 {#if mode === 'battery'}
 	<table class="w-full text-sm">
 		<thead>
-			<tr class="border-b border-[#333] text-left text-xs text-[#666]">
+			<tr class="border-b border-[#333] text-left text-xs text-[#aaa]">
 				<th class="pb-1.5 font-normal">Group</th>
 				<th class="pb-1.5 text-right font-normal">Batteries</th>
 			</tr>
@@ -44,7 +44,7 @@
 		</tbody>
 		<tfoot>
 			<tr class="border-t border-[#444]">
-				<td class="pt-1.5 text-xs text-[#888]">Total</td>
+				<td class="pt-1.5 text-xs text-[#ccc]">Total</td>
 				<td class="pt-1.5 text-right font-mono font-medium text-[#f59e0b]">{totalNoSolar}</td>
 			</tr>
 		</tfoot>
@@ -52,7 +52,7 @@
 {:else}
 	<table class="w-full text-sm">
 		<thead>
-			<tr class="border-b border-[#333] text-left text-xs text-[#666]">
+			<tr class="border-b border-[#333] text-left text-xs text-[#ccc]">
 				<th class="pb-1.5 font-normal">Group</th>
 				<th class="pb-1.5 text-right font-normal">{committedWorstDays} worst day{committedWorstDays === 1 ? '' : 's'}</th>
 				<th class="pb-1.5 text-right font-normal">All worst days</th>
@@ -69,12 +69,12 @@
 		</tbody>
 		<tfoot>
 			<tr class="border-t border-[#444]">
-				<td class="pt-1.5 text-xs text-[#888]">Total</td>
+				<td class="pt-1.5 text-xs text-[#aaa]">Total</td>
 				<td class="pt-1.5 text-right font-mono font-medium text-[#f59e0b]">{totalN}</td>
 				<td class="pt-1.5 text-right font-mono font-medium text-[#f59e0b]">{totalAll}</td>
 			</tr>
 			<tr>
-				<td class="pt-1 text-xs text-[#555]">vs battery-only</td>
+				<td class="pt-1 text-xs text-[#888]">vs battery-only</td>
 				<td class="pt-1 text-right font-mono text-xs text-[#5fa87a]">
 					{reductionN > 0 ? `-${reductionN} (${pctN}%)` : '—'}
 				</td>
