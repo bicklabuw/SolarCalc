@@ -147,7 +147,7 @@
 			if (!long || isNaN(lonN) || lonN < -180 || lonN > 180)
 				errs.long = 'Enter a valid longitude (−180 to 180).';
 			if (effectivePanel <= 0) errs.panel = 'Panel rating must be greater than 0.';
-			if (groups.some((g) => g.panels < 1)) errs.panels = 'Each group needs at least 1 panel.';
+			if (groups.some((g) => g.panels < 0)) errs.panels = 'Panel count cannot be negative.';
 			const days = totalDays();
 			if (numWorstDays < 0 || numWorstDays > days)
 				errs.worstDays = `Must be between 0 and ${days} (total days).`;

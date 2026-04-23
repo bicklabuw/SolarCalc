@@ -41,7 +41,7 @@
 			<input
 				type="number"
 				bind:value={group.panels}
-				min="1"
+				min="0"
 				class="w-16 rounded-sm border border-[#333] bg-[#0f0f0f] px-2 py-0.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
 			/>
 		</label>
