@@ -17,6 +17,7 @@
 	let endDate = $state('');
 
 	let devicePowerW = $state(4);
+	let safetyMarginPct = $state(30);
 
 	const BATTERY_PRESETS = [200, 500, 1000, 2000, 2500];
 	let batteryPreset = $state(1000);
@@ -166,7 +167,7 @@
 		const devicesPerGroup = groups.map((g) => g.devices);
 
 		if (mode === 'battery') {
-			batteryResult = calculateBatteryOnly(start, end, devicesPerGroup, effectiveBattery, devicePowerW);
+			batteryResult = calculateBatteryOnly(start, end, devicesPerGroup, effectiveBattery, devicePowerW, 1 + safetyMarginPct / 100);
 			status = 'done';
 			return;
 		}
@@ -186,13 +187,14 @@
 			statusMsg = 'Running simulation…';
 			committedWorstDays = numWorstDays;
 			committedBatteryCapacity = effectiveBattery;
+			const margin = 1 + safetyMarginPct / 100;
 			[solarResultN, solarResultAll] = await Promise.all([
-				calculateWithSolar(start, end, devicesPerGroup, effectiveBattery, solarData, numWorstDays, effectivePanel, panels, devicePowerW),
-				calculateWithSolar(start, end, devicesPerGroup, effectiveBattery, solarData, days, effectivePanel, panels, devicePowerW)
+				calculateWithSolar(start, end, devicesPerGroup, effectiveBattery, solarData, numWorstDays, effectivePanel, panels, devicePowerW, margin),
+				calculateWithSolar(start, end, devicesPerGroup, effectiveBattery, solarData, days, effectivePanel, panels, devicePowerW, margin)
 			]);
 
 			// Keep battery-only for "reduction vs battery-only" comparison
-			batteryResult = calculateBatteryOnly(start, end, devicesPerGroup, effectiveBattery, devicePowerW);
+			batteryResult = calculateBatteryOnly(start, end, devicesPerGroup, effectiveBattery, devicePowerW, margin);
 
 			status = 'done';
 			statusMsg = '';
@@ -297,6 +299,23 @@
 					class="mt-1 w-32 rounded-sm border border-[#333] bg-[#1a1a1a] px-3 py-1.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
 				/>
 				<p class="mt-0.5 text-xs text-[#888]">~{(devicePowerW * 24).toFixed(0)} Wh/day per device</p>
+			</div>
+
+			<div>
+				<label class="block text-xs text-[#e8e8e8]" for="safetyMarginPct">
+					Safety margin (%)
+					<span class="ml-1 text-[#888]">— default is 30%</span>
+				</label>
+				<input
+					id="safetyMarginPct"
+					type="number"
+					bind:value={safetyMarginPct}
+					min="0"
+					max="200"
+					step="1"
+					class="mt-1 w-32 rounded-sm border border-[#333] bg-[#1a1a1a] px-3 py-1.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
+				/>
+				<p class="mt-0.5 text-xs text-[#888]">Adds {safetyMarginPct}% buffer to device power draw</p>
 			</div>
 		</section>
 
@@ -573,7 +592,7 @@
 					</div>
 					<div>
 						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">Hour-by-hour simulation</p>
-						<p>The battery charges when solar output exceeds device load and discharges otherwise. Energy beyond the battery's capacity is lost. A 30% safety margin is applied to device power draw.</p>
+						<p>The battery charges when solar output exceeds device load and discharges otherwise. Energy beyond the battery's capacity is lost. A configurable safety margin (default 30%) is applied to device power draw.</p>
 					</div>
 					<div>
 						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">N worst days scenario</p>

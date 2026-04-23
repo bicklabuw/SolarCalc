@@ -1,5 +1,3 @@
-const SAFETY_MARGIN = 1.3;
-
 function simulate(netLoad: number[], totalCapacityWh: number): boolean {
 	let charge = totalCapacityWh;
 	for (const net of netLoad) {
@@ -34,7 +32,8 @@ self.onmessage = (e: MessageEvent) => {
 		systemEfficiency,
 		batteryCapacity,
 		batteriesWithoutSolar,
-		devicePowerW
+		devicePowerW,
+		safetyMargin
 	}: {
 		devices: number;
 		numDays: number;
@@ -47,9 +46,10 @@ self.onmessage = (e: MessageEvent) => {
 		batteryCapacity: number;
 		batteriesWithoutSolar: number;
 		devicePowerW: number;
+		safetyMargin: number;
 	} = e.data;
 
-	const hourlyLoad = devices * devicePowerW * SAFETY_MARGIN;
+	const hourlyLoad = devices * devicePowerW * safetyMargin;
 	const numAvgDays = numDays - numWorstDays;
 
 	// Precompute net load: positive = battery drains, negative = battery charges

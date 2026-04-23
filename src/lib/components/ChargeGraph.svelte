@@ -9,7 +9,7 @@
 		batteryCapacityWh: number;
 	} = $props();
 
-	const PAD = { left: 60, right: 20, top: 16, bottom: 36 };
+	const PAD = { left: 70, right: 20, top: 16, bottom: 36 };
 	const W = 800;
 	const H = 220;
 	const chartW = W - PAD.left - PAD.right;
@@ -102,7 +102,7 @@
 		{#each yTicks() as tick}
 			{@const y = toY(tick)}
 			<line x1={PAD.left - 4} y1={y} x2={PAD.left} y2={y} stroke="#444" stroke-width="1" />
-			<text x={PAD.left - 7} y={y + 4} text-anchor="end" font-size="10" fill="#999">
+			<text x={PAD.left - 7} y={y + 4} text-anchor="end" font-size="13" fill="#bbb">
 				{fmtWh(tick)}
 			</text>
 		{/each}
@@ -123,7 +123,7 @@
 					x={toX(day * 24 + 12)}
 					y={PAD.top + chartH + 16}
 					text-anchor="middle"
-					font-size="10"
+					font-size="12"
 					fill="#999"
 				>
 					Day {day + 1}
@@ -154,8 +154,8 @@
 			x={12}
 			y={PAD.top + chartH / 2}
 			text-anchor="middle"
-			font-size="10"
-			fill="#888"
+			font-size="13"
+			fill="#bbb"
 			transform="rotate(-90, 12, {PAD.top + chartH / 2})"
 		>
 			Charge (Wh)
