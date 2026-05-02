@@ -56,7 +56,14 @@ export async function calculateWithSolar(
 	devicePowerW: number,
 	safetyMargin: number = 1.3
 ): Promise<TotalOutput> {
-	const batteriesOnly = calculateBatteryOnly(startDate, endDate, devicesPerGroup, batteryCapacity, devicePowerW, safetyMargin);
+	const batteriesOnly = calculateBatteryOnly(
+		startDate,
+		endDate,
+		devicesPerGroup,
+		batteryCapacity,
+		devicePowerW,
+		safetyMargin
+	);
 	const numDays = getNumDays(startDate, endDate);
 	const { average, worst } = solarData;
 

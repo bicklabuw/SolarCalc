@@ -21,22 +21,32 @@
 	// Maximum number of labeled day ticks on the x-axis — adjust here to change density
 	const MAX_X_LABELS = 14;
 
-	const maxCapacity = $derived(Math.max(...groups.map((g) => g.numBatteries * batteryCapacityWh), 1));
+	const maxCapacity = $derived(
+		Math.max(...groups.map((g) => g.numBatteries * batteryCapacityWh), 1)
+	);
 	const numHours = $derived(groups[0]?.chargeHistory.length ?? 0);
 	const numDays = $derived(Math.ceil(numHours / 24));
 
 	// Unique ID for aria attributes (based on title slug)
-	const titleSlug = $derived(title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+	const titleSlug = $derived(
+		title
+			.toLowerCase()
+			.replace(/\s+/g, '-')
+			.replace(/[^a-z0-9-]/g, '')
+	);
 
 	const accessibilityDesc = $derived(
 		`Battery charge simulation over ${Math.ceil((groups[0]?.chargeHistory.length ?? 0) / 24)} day(s) for ${groups.length} group(s). ` +
-		groups.map((g, i) => {
-			const name = g.name || `Group ${i + 1}`;
-			const cap = g.numBatteries * batteryCapacityWh;
-			const minCharge = Math.min(...g.chargeHistory);
-			const minPct = cap > 0 ? ((minCharge / cap) * 100).toFixed(0) : '0';
-			return `${name}: ${g.numBatteries} battery(ies), minimum charge ${minCharge.toFixed(0)} Wh (${minPct}% of capacity)`;
-		}).join('. ') + '.'
+			groups
+				.map((g, i) => {
+					const name = g.name || `Group ${i + 1}`;
+					const cap = g.numBatteries * batteryCapacityWh;
+					const minCharge = Math.min(...g.chargeHistory);
+					const minPct = cap > 0 ? ((minCharge / cap) * 100).toFixed(0) : '0';
+					return `${name}: ${g.numBatteries} battery(ies), minimum charge ${minCharge.toFixed(0)} Wh (${minPct}% of capacity)`;
+				})
+				.join('. ') +
+			'.'
 	);
 
 	// worst group = lowest minimum charge relative to its own capacity
@@ -93,13 +103,13 @@
 		<title id="chart-title-{titleSlug}">{title}</title>
 		<desc id="chart-desc-{titleSlug}">{accessibilityDesc}</desc>
 		<!-- Day boundary lines -->
-		{#each Array.from({ length: numDays + 1 }, (_, d) => d) as day}
+		{#each Array.from({ length: numDays + 1 }, (_, d) => d) as day (day)}
 			{@const x = toX(day * 24)}
 			<line x1={x} y1={PAD.top} x2={x} y2={PAD.top + chartH} stroke="#222" stroke-width="1" />
 		{/each}
 
 		<!-- Y axis ticks + labels -->
-		{#each yTicks() as tick}
+		{#each yTicks() as tick (tick)}
 			{@const y = toY(tick)}
 			<line x1={PAD.left - 4} y1={y} x2={PAD.left} y2={y} stroke="#444" stroke-width="1" />
 			<text x={PAD.left - 7} y={y + 4} text-anchor="end" font-size="13" fill="#bbb">
@@ -108,7 +118,7 @@
 		{/each}
 
 		<!-- X axis ticks + day labels -->
-		{#each Array.from({ length: numDays + 1 }, (_, d) => d) as day}
+		{#each Array.from({ length: numDays + 1 }, (_, d) => d) as day (day)}
 			{@const x = toX(day * 24)}
 			<line
 				x1={x}
@@ -162,7 +172,7 @@
 		</text>
 
 		<!-- Group lines -->
-		{#each groups as group, i}
+		{#each groups as group, i (i)}
 			{@const isWorst = i === worstIndex()}
 			{@const color = isWorst ? ACCENT : LINE_COLORS[i % LINE_COLORS.length]}
 			<path
@@ -175,7 +185,7 @@
 		{/each}
 
 		<!-- Legend -->
-		{#each groups as group, i}
+		{#each groups as group, i (i)}
 			{@const isWorst = i === worstIndex()}
 			{@const color = isWorst ? ACCENT : LINE_COLORS[i % LINE_COLORS.length]}
 			{@const lx = PAD.left + i * 110}
