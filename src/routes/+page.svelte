@@ -290,7 +290,7 @@
 			<div>
 				<p class="text-xs text-[#e8e8e8]">Battery capacity (Wh)</p>
 				<div class="mt-1 flex flex-wrap gap-1.5">
-					{#each BATTERY_PRESETS as preset}
+					{#each BATTERY_PRESETS as preset (preset)}
 						<button
 							onclick={() => {
 								batteryPreset = preset;
@@ -384,7 +384,7 @@
 			{/if}
 
 			<div class="space-y-2">
-				{#each groups as _group, i (i)}
+				{#each { length: groups.length }, i (i)}
 					<DeviceGroup
 						bind:group={groups[i]}
 						index={i}
@@ -507,7 +507,7 @@
 				<div>
 					<p class="text-xs text-[#e8e8e8]">Panel rating (W)</p>
 					<div class="mt-1 flex flex-wrap gap-1.5">
-						{#each PANEL_PRESETS as preset}
+						{#each PANEL_PRESETS as preset (preset)}
 							<button
 								onclick={() => {
 									panelPreset = preset;

@@ -2,7 +2,6 @@
 	let {
 		mode,
 		groups,
-		batteryOnlyTotals,
 		committedWorstDays = 0
 	}: {
 		mode: 'battery' | 'solar';
@@ -12,7 +11,6 @@
 			batteriesN?: number;
 			batteriesAll?: number;
 		}[];
-		batteryOnlyTotals?: { totalNoSolar: number };
 		committedWorstDays?: number;
 	} = $props();
 
@@ -35,7 +33,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each groups as group, i}
+			{#each groups as group, i (i)}
 				<tr class="border-b border-[#1f1f1f]">
 					<td class="py-1.5 text-[#e8e8e8]">{group.name || `Group ${i + 1}`}</td>
 					<td class="py-1.5 text-right font-mono text-[#e8e8e8]">{group.batteriesNoSolar}</td>
@@ -61,7 +59,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each groups as group, i}
+			{#each groups as group, i (i)}
 				<tr class="border-b border-[#1f1f1f]">
 					<td class="py-1.5 text-[#e8e8e8]">{group.name || `Group ${i + 1}`}</td>
 					<td class="py-1.5 text-right font-mono text-[#e8e8e8]">{group.batteriesN ?? '—'}</td>
