@@ -1,0 +1,101 @@
+stages:
+  - lint
+  - build
+  - deploy
+  - create-pages
+
+lint:
+  stage: lint
+  image: node:lts
+  script:
+    - npm ci
+    - npm run lint
+  tags:
+    - docker
+  only:
+    - merge_requests
+    - main
+
+typescript:
+  stage: lint
+  image: node:lts
+  script:
+    - npm ci
+    - npm run check
+  tags:
+    - docker
+  only:
+    - merge_requests
+    - main
+
+build:
+  stage: build
+  image: node:lts
+  script:
+    - npm ci
+    - npm run build
+    - find build -type f -name "*.gz" ! -exec gzip -t {} \; -exec rm {} \;
+
+  tags:
+    - docker
+  only:
+    - merge_requests
+    - main
+  artifacts:
+    paths:
+      - build/
+
+deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache git openssh
+  script:
+    - echo "Deploying build to 'build-only' branch..."
+
+    # save build somewhere else
+    - mkdir -p /tmp/build-copy
+    - cp -r build/* /tmp/build-copy/
+
+    # clone the repo and switch to the build-only branch
+    - git config --global user.name "$GITLAB_USER_NAME"
+    - git config --global user.email "$GITLAB_USER_EMAIL"
+    - git clone --depth=1 --branch=build-only https://$CI_DEPLOY_USER:$CI_DEPLOY_TOKEN@git.doit.wisc.edu/insecteavesdropper/misc/solar-calculator.git temp || git clone --depth=1 https://$CI_DEPLOY_USER:$CI_DEPLOY_TOKEN@git.doit.wisc.edu/insecteavesdropper/misc/solar-calculator.git temp
+
+    - cd temp
+    - git checkout -B build-only
+
+    # remove old files and copy in fresh build
+    - rm -rf *
+    - cp -r /tmp/build-copy/* .
+
+    # clean .gitignore if needed
+    - find . -name ".gitignore" -delete
+
+    # commit and push
+    - git add .
+    - git commit -m "Deploy from $CI_COMMIT_REF_NAME ($CI_COMMIT_SHORT_SHA)" || echo "Nothing to commit"
+    - git push origin build-only
+  tags:
+    - docker
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: always
+    - when: never
+
+pages:
+  stage: create-pages
+  image: node:lts
+  needs:
+    - job: build
+      artifacts: true
+  script:
+    - mkdir -p public
+    - cp -r build/* public/
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+  tags:
+    - docker

@@ -57,7 +57,8 @@
 	let lat = $state('');
 	let long = $state('');
 	let numWorstDays = $state(3);
-	let committedWorstDays = $state(3);let committedBatteryCapacity = $state<number>(effectiveBattery);
+	let committedWorstDays = $state(3);
+	let committedBatteryCapacity = $state<number>(effectiveBattery);
 	const PANEL_PRESETS = [40, 100, 160, 200, 220];
 	let panelPreset = $state(100);
 	let panelCustom = $state('');
