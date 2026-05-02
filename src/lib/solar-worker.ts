@@ -62,7 +62,9 @@ self.onmessage = (e: MessageEvent) => {
 	}
 	for (let d = 0; d < numWorstDays; d++) {
 		for (let h = 0; h < 24; h++) {
-			netLoad.push(hourlyLoad - (solarWorst[h] / 1000) * panelRatingW * numPanels * systemEfficiency);
+			netLoad.push(
+				hourlyLoad - (solarWorst[h] / 1000) * panelRatingW * numPanels * systemEfficiency
+			);
 		}
 	}
 

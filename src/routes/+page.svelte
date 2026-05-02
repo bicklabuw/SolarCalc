@@ -24,7 +24,7 @@
 	let batteryCustom = $state('');
 	let useCustomBattery = $state(false);
 	const effectiveBattery = $derived(
-		useCustomBattery ? (parseFloat(batteryCustom) || 0) : batteryPreset
+		useCustomBattery ? parseFloat(batteryCustom) || 0 : batteryPreset
 	);
 
 	let groups = $state<Group[]>([{ name: '', devices: 4, panels: 1 }]);
@@ -63,9 +63,7 @@
 	let panelPreset = $state(100);
 	let panelCustom = $state('');
 	let useCustomPanel = $state(false);
-	const effectivePanel = $derived(
-		useCustomPanel ? (parseFloat(panelCustom) || 0) : panelPreset
-	);
+	const effectivePanel = $derived(useCustomPanel ? parseFloat(panelCustom) || 0 : panelPreset);
 
 	let geoError = $state('');
 
@@ -168,7 +166,14 @@
 		const devicesPerGroup = groups.map((g) => g.devices);
 
 		if (mode === 'battery') {
-			batteryResult = calculateBatteryOnly(start, end, devicesPerGroup, effectiveBattery, devicePowerW, 1 + safetyMarginPct / 100);
+			batteryResult = calculateBatteryOnly(
+				start,
+				end,
+				devicesPerGroup,
+				effectiveBattery,
+				devicePowerW,
+				1 + safetyMarginPct / 100
+			);
 			status = 'done';
 			return;
 		}
@@ -190,12 +195,41 @@
 			committedBatteryCapacity = effectiveBattery;
 			const margin = 1 + safetyMarginPct / 100;
 			[solarResultN, solarResultAll] = await Promise.all([
-				calculateWithSolar(start, end, devicesPerGroup, effectiveBattery, solarData, numWorstDays, effectivePanel, panels, devicePowerW, margin),
-				calculateWithSolar(start, end, devicesPerGroup, effectiveBattery, solarData, days, effectivePanel, panels, devicePowerW, margin)
+				calculateWithSolar(
+					start,
+					end,
+					devicesPerGroup,
+					effectiveBattery,
+					solarData,
+					numWorstDays,
+					effectivePanel,
+					panels,
+					devicePowerW,
+					margin
+				),
+				calculateWithSolar(
+					start,
+					end,
+					devicesPerGroup,
+					effectiveBattery,
+					solarData,
+					days,
+					effectivePanel,
+					panels,
+					devicePowerW,
+					margin
+				)
 			]);
 
 			// Keep battery-only for "reduction vs battery-only" comparison
-			batteryResult = calculateBatteryOnly(start, end, devicesPerGroup, effectiveBattery, devicePowerW, margin);
+			batteryResult = calculateBatteryOnly(
+				start,
+				end,
+				devicesPerGroup,
+				effectiveBattery,
+				devicePowerW,
+				margin
+			);
 
 			status = 'done';
 			statusMsg = '';
@@ -218,7 +252,6 @@
 
 <div class="min-h-screen bg-[#0f0f0f] px-4 py-8 text-[#e8e8e8]">
 	<div class="mx-auto max-w-2xl space-y-8">
-
 		<!-- Header -->
 		<div>
 			<h1 class="text-lg font-semibold tracking-wide text-[#e8e8e8]">Solar / Battery Calculator</h1>
@@ -227,7 +260,9 @@
 
 		<!-- ── 1. Experiment Parameters ───────────────────────────────────────── -->
 		<section class="space-y-4">
-			<h2 class="text-xs font-medium uppercase tracking-widest text-[#e8e8e8]">Experiment Parameters</h2>
+			<h2 class="text-xs font-medium tracking-widest text-[#e8e8e8] uppercase">
+				Experiment Parameters
+			</h2>
 
 			<div class="grid grid-cols-2 gap-4">
 				<div>
@@ -257,8 +292,12 @@
 				<div class="mt-1 flex flex-wrap gap-1.5">
 					{#each BATTERY_PRESETS as preset}
 						<button
-							onclick={() => { batteryPreset = preset; useCustomBattery = false; }}
-							class="rounded-sm border px-3 py-1 text-sm transition-colors {!useCustomBattery && batteryPreset === preset
+							onclick={() => {
+								batteryPreset = preset;
+								useCustomBattery = false;
+							}}
+							class="rounded-sm border px-3 py-1 text-sm transition-colors {!useCustomBattery &&
+							batteryPreset === preset
 								? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
 								: 'border-[#333] text-[#aaa] hover:border-[#555]'}"
 						>
@@ -299,7 +338,9 @@
 					step="0.1"
 					class="mt-1 w-32 rounded-sm border border-[#333] bg-[#1a1a1a] px-3 py-1.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
 				/>
-				<p class="mt-0.5 text-xs text-[#888]">~{(devicePowerW * 24).toFixed(0)} Wh/day per device</p>
+				<p class="mt-0.5 text-xs text-[#888]">
+					~{(devicePowerW * 24).toFixed(0)} Wh/day per device
+				</p>
 			</div>
 
 			<div>
@@ -316,16 +357,24 @@
 					step="1"
 					class="mt-1 w-32 rounded-sm border border-[#333] bg-[#1a1a1a] px-3 py-1.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
 				/>
-				<p class="mt-0.5 text-xs text-[#888]">Adds {safetyMarginPct}% buffer to device power draw</p>
+				<p class="mt-0.5 text-xs text-[#888]">
+					Adds {safetyMarginPct}% buffer to device power draw
+				</p>
 			</div>
 		</section>
 
 		<!-- ── 2. Device Groups ───────────────────────────────────────────────── -->
 		<section class="space-y-3">
-			<h2 class="text-xs font-medium uppercase tracking-widest text-[#e8e8e8]">Device Groups</h2>
-			<p class="text-xs text-[#e8e8e8]">Each group has its own battery. Devices draw {devicePowerW} W continuously (~{(devicePowerW * 24).toFixed(0)} Wh/day each).</p>
+			<h2 class="text-xs font-medium tracking-widest text-[#e8e8e8] uppercase">Device Groups</h2>
+			<p class="text-xs text-[#e8e8e8]">
+				Each group has its own battery. Devices draw {devicePowerW} W continuously (~{(
+					devicePowerW * 24
+				).toFixed(0)} Wh/day each).
+			</p>
 			{#if mode === 'solar'}
-				<p class="rounded-sm border border-[#f59e0b]/30 bg-[#f59e0b]/5 px-3 py-2 text-xs text-[#f59e0b]">
+				<p
+					class="rounded-sm border border-[#f59e0b]/30 bg-[#f59e0b]/5 px-3 py-2 text-xs text-[#f59e0b]"
+				>
 					Make sure to set the number of solar panels for each group below.
 				</p>
 			{/if}
@@ -352,7 +401,7 @@
 
 			<button
 				onclick={() => groups.push({ name: '', devices: 4, panels: 1 })}
-				class="text-sm text-[#888] hover:text-[#e8e8e8] transition-colors"
+				class="text-sm text-[#888] transition-colors hover:text-[#e8e8e8]"
 			>
 				+ Add Group
 			</button>
@@ -360,12 +409,13 @@
 
 		<!-- ── 3. Mode Buttons ────────────────────────────────────────────────── -->
 		<section class="space-y-3">
-			<h2 class="text-xs font-medium uppercase tracking-widest text-[#e8e8e8]">Mode</h2>
+			<h2 class="text-xs font-medium tracking-widest text-[#e8e8e8] uppercase">Mode</h2>
 
 			<div class="flex gap-3">
 				<button
 					onclick={() => trySetMode('battery')}
-					class="flex-1 rounded-sm border py-2 text-sm font-medium transition-colors {mode === 'battery'
+					class="flex-1 rounded-sm border py-2 text-sm font-medium transition-colors {mode ===
+					'battery'
 						? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
 						: 'border-[#333] text-[#888] hover:border-[#555] hover:text-[#e8e8e8]'}"
 				>
@@ -373,7 +423,8 @@
 				</button>
 				<button
 					onclick={() => trySetMode('solar')}
-					class="flex-1 rounded-sm border py-2 text-sm font-medium transition-colors {mode === 'solar'
+					class="flex-1 rounded-sm border py-2 text-sm font-medium transition-colors {mode ===
+					'solar'
 						? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
 						: 'border-[#333] text-[#888] hover:border-[#555] hover:text-[#e8e8e8]'}"
 				>
@@ -384,8 +435,13 @@
 			{#if pendingMode}
 				<p class="text-sm text-[#888]">
 					Switching modes will clear your current results.
-					<button onclick={() => applyMode(pendingMode!)} class="ml-1 text-[#f59e0b] hover:underline">Confirm</button>
-					<button onclick={() => (pendingMode = null)} class="ml-1 text-[#888] hover:text-[#e8e8e8]">Cancel</button>
+					<button
+						onclick={() => applyMode(pendingMode!)}
+						class="ml-1 text-[#f59e0b] hover:underline">Confirm</button
+					>
+					<button onclick={() => (pendingMode = null)} class="ml-1 text-[#888] hover:text-[#e8e8e8]"
+						>Cancel</button
+					>
 				</p>
 			{/if}
 		</section>
@@ -393,13 +449,17 @@
 		<!-- ── 4. Solar Inputs ────────────────────────────────────────────────── -->
 		{#if mode === 'solar'}
 			<section class="space-y-4">
-				<h2 class="text-xs font-medium uppercase tracking-widest text-[#e8e8e8]">Solar Parameters</h2>
+				<h2 class="text-xs font-medium tracking-widest text-[#e8e8e8] uppercase">
+					Solar Parameters
+				</h2>
 
 				<div class="grid grid-cols-2 gap-4">
 					<div>
 						<label class="block text-xs text-[#e8e8e8]" for="lat">
 							Latitude
-							<button onclick={useMyLocation} class="ml-2 text-[#f59e0b] hover:underline">Use my location</button>
+							<button onclick={useMyLocation} class="ml-2 text-[#f59e0b] hover:underline"
+								>Use my location</button
+							>
 						</label>
 						<input
 							id="lat"
@@ -449,8 +509,12 @@
 					<div class="mt-1 flex flex-wrap gap-1.5">
 						{#each PANEL_PRESETS as preset}
 							<button
-								onclick={() => { panelPreset = preset; useCustomPanel = false; }}
-								class="rounded-sm border px-3 py-1 text-sm transition-colors {!useCustomPanel && panelPreset === preset
+								onclick={() => {
+									panelPreset = preset;
+									useCustomPanel = false;
+								}}
+								class="rounded-sm border px-3 py-1 text-sm transition-colors {!useCustomPanel &&
+								panelPreset === preset
 									? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
 									: 'border-[#333] text-[#aaa] hover:border-[#555]'}"
 							>
@@ -500,7 +564,9 @@
 		<!-- ── 6. Results ─────────────────────────────────────────────────────── -->
 		{#if mode === 'battery' && batteryResult}
 			<section class="space-y-4 rounded-sm border border-[#2a2a2a] bg-[#1a1a1a] p-4">
-				<h2 class="text-xs font-medium uppercase tracking-widest text-[#888]">Results — Battery Only</h2>
+				<h2 class="text-xs font-medium tracking-widest text-[#888] uppercase">
+					Results — Battery Only
+				</h2>
 
 				<div>
 					<p class="mb-2 text-xs text-[#999]">Batteries required per group</p>
@@ -528,7 +594,9 @@
 
 		{#if mode === 'solar' && solarResultN && solarResultAll && batteryResult}
 			<section class="space-y-6 rounded-sm border border-[#2a2a2a] bg-[#1a1a1a] p-4">
-				<h2 class="text-xs font-medium uppercase tracking-widest text-[#888]">Results — Battery + Solar</h2>
+				<h2 class="text-xs font-medium tracking-widest text-[#888] uppercase">
+					Results — Battery + Solar
+				</h2>
 
 				<div>
 					<p class="mb-2 text-xs text-[#999]">Batteries required per group</p>
@@ -571,45 +639,83 @@
 		<section class="border-t border-[#2a2a2a] pt-4">
 			<button
 				onclick={() => (methodologyOpen = !methodologyOpen)}
-				class="flex w-full items-center gap-2 text-left text-sm text-[#888] hover:text-[#888] transition-colors"
+				class="flex w-full items-center gap-2 text-left text-sm text-[#888] transition-colors hover:text-[#888]"
 			>
 				<span class="font-mono text-xs">{methodologyOpen ? '▼' : '▶'}</span>
 				How is this calculated?
 			</button>
 
 			{#if methodologyOpen}
-				<div class="mt-4 space-y-3 text-sm text-[#888] leading-relaxed">
+				<div class="mt-4 space-y-3 text-sm leading-relaxed text-[#888]">
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">Solar irradiance data</p>
-						<p>Hourly irradiance (kWh/m²) is fetched from the NASA POWER API using the ALLSKY_SFC_SW_DWN parameter, over the same seasonal date range for the years 2023–2025.</p>
+						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+							Solar irradiance data
+						</p>
+						<p>
+							Hourly irradiance (kWh/m²) is fetched from the NASA POWER API using the
+							ALLSKY_SFC_SW_DWN parameter, over the same seasonal date range for the years
+							2023–2025.
+						</p>
 					</div>
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">Average vs worst case</p>
-						<p>For each hour of the day, the average profile takes the mean irradiance across all matching days and years. The worst-case profile takes the single lowest observed value for that hour.</p>
+						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+							Average vs worst case
+						</p>
+						<p>
+							For each hour of the day, the average profile takes the mean irradiance across all
+							matching days and years. The worst-case profile takes the single lowest observed value
+							for that hour.
+						</p>
 					</div>
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">Solar panel output</p>
-						<p>Panel output (Wh) = irradiance × panel rating × number of panels × 80% system efficiency, which accounts for wiring losses, inverter efficiency, soiling, and temperature.</p>
+						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+							Solar panel output
+						</p>
+						<p>
+							Panel output (Wh) = irradiance × panel rating × number of panels × 80% system
+							efficiency, which accounts for wiring losses, inverter efficiency, soiling, and
+							temperature.
+						</p>
 					</div>
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">Hour-by-hour simulation</p>
-						<p>The battery charges when solar output exceeds device load and discharges otherwise. Energy beyond the battery's capacity is lost. A configurable safety margin (default 30%) is applied to device power draw.</p>
+						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+							Hour-by-hour simulation
+						</p>
+						<p>
+							The battery charges when solar output exceeds device load and discharges otherwise.
+							Energy beyond the battery's capacity is lost. A configurable safety margin (default
+							30%) is applied to device power draw.
+						</p>
 					</div>
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">N worst days scenario</p>
-						<p>The first (total days − N) days use the average hourly profile. The final N days use the worst-case profile. Battery state carries over naturally between days.</p>
+						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+							N worst days scenario
+						</p>
+						<p>
+							The first (total days − N) days use the average hourly profile. The final N days use
+							the worst-case profile. Battery state carries over naturally between days.
+						</p>
 					</div>
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">All worst days scenario</p>
-						<p>Every day uses the worst-case hourly profile — the maximum stress test for the system.</p>
+						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+							All worst days scenario
+						</p>
+						<p>
+							Every day uses the worst-case hourly profile — the maximum stress test for the system.
+						</p>
 					</div>
 					<div>
-						<p class="mb-0.5 text-xs font-medium uppercase tracking-wide text-[#e8e8e8]">Finding the minimum batteries</p>
-						<p>A binary search is run over candidate battery counts. For each candidate, the full simulation is executed. The smallest count that keeps the battery from running out is used.</p>
+						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+							Finding the minimum batteries
+						</p>
+						<p>
+							A binary search is run over candidate battery counts. For each candidate, the full
+							simulation is executed. The smallest count that keeps the battery from running out is
+							used.
+						</p>
 					</div>
 				</div>
 			{/if}
 		</section>
-
 	</div>
 </div>

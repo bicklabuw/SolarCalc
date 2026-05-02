@@ -54,7 +54,9 @@
 		<thead>
 			<tr class="border-b border-[#333] text-left text-xs text-[#ccc]">
 				<th class="pb-1.5 font-normal">Group</th>
-				<th class="pb-1.5 text-right font-normal">{committedWorstDays} worst day{committedWorstDays === 1 ? '' : 's'}</th>
+				<th class="pb-1.5 text-right font-normal"
+					>{committedWorstDays} worst day{committedWorstDays === 1 ? '' : 's'}</th
+				>
 				<th class="pb-1.5 text-right font-normal">All worst days</th>
 			</tr>
 		</thead>

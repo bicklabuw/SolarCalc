@@ -21,22 +21,32 @@
 	// Maximum number of labeled day ticks on the x-axis — adjust here to change density
 	const MAX_X_LABELS = 14;
 
-	const maxCapacity = $derived(Math.max(...groups.map((g) => g.numBatteries * batteryCapacityWh), 1));
+	const maxCapacity = $derived(
+		Math.max(...groups.map((g) => g.numBatteries * batteryCapacityWh), 1)
+	);
 	const numHours = $derived(groups[0]?.chargeHistory.length ?? 0);
 	const numDays = $derived(Math.ceil(numHours / 24));
 
 	// Unique ID for aria attributes (based on title slug)
-	const titleSlug = $derived(title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+	const titleSlug = $derived(
+		title
+			.toLowerCase()
+			.replace(/\s+/g, '-')
+			.replace(/[^a-z0-9-]/g, '')
+	);
 
 	const accessibilityDesc = $derived(
 		`Battery charge simulation over ${Math.ceil((groups[0]?.chargeHistory.length ?? 0) / 24)} day(s) for ${groups.length} group(s). ` +
-		groups.map((g, i) => {
-			const name = g.name || `Group ${i + 1}`;
-			const cap = g.numBatteries * batteryCapacityWh;
-			const minCharge = Math.min(...g.chargeHistory);
-			const minPct = cap > 0 ? ((minCharge / cap) * 100).toFixed(0) : '0';
-			return `${name}: ${g.numBatteries} battery(ies), minimum charge ${minCharge.toFixed(0)} Wh (${minPct}% of capacity)`;
-		}).join('. ') + '.'
+			groups
+				.map((g, i) => {
+					const name = g.name || `Group ${i + 1}`;
+					const cap = g.numBatteries * batteryCapacityWh;
+					const minCharge = Math.min(...g.chargeHistory);
+					const minPct = cap > 0 ? ((minCharge / cap) * 100).toFixed(0) : '0';
+					return `${name}: ${g.numBatteries} battery(ies), minimum charge ${minCharge.toFixed(0)} Wh (${minPct}% of capacity)`;
+				})
+				.join('. ') +
+			'.'
 	);
 
 	// worst group = lowest minimum charge relative to its own capacity
