@@ -182,6 +182,12 @@
 			const parts = [place, region && region !== place ? region : '', country].filter(Boolean);
 			nearestPlace = parts.join(', ');
 			nearestUnpopulated = !place && !region;
+			// Coordinates are the source of truth: when they resolve to a real place,
+			// reflect that place back into the city/zip search box so the two inputs
+			// stay in sync. Leave the search box alone for open-water / errored lookups.
+			if (nearestPlace) {
+				placeQuery = nearestPlace;
+			}
 		} catch {
 			nearestPlace = '';
 			nearestUnpopulated = false;
@@ -757,17 +763,22 @@
 				</h2>
 
 				<div class="space-y-2 rounded-sm border border-[#2a2a2a] bg-[#141414] p-3">
-					<p class="text-xs font-medium text-[#e8e8e8]">
-						Location
-						<span class="ml-1 font-normal text-[#888]">
-							(set it by city / zip, by GPS, or by entering coordinates directly)
-						</span>
-					</p>
+					<div class="space-y-0.5">
+						<h4 class="text-sm font-semibold tracking-wide text-[#e8e8e8]">Location</h4>
+						<p class="text-xs text-[#888]">Use either of the methods below.</p>
+					</div>
 
 					<div>
-						<label class="block text-xs text-[#aaa]" for="placeQuery">
-							Search by city, town, or zip code
-						</label>
+						<div class="flex items-center gap-3 pt-1 pb-2">
+							<div class="h-px flex-1 bg-[#2a2a2a]"></div>
+							<label
+								for="placeQuery"
+								class="text-xs font-medium tracking-widest text-[#888] uppercase"
+							>
+								search by city or zip
+							</label>
+							<div class="h-px flex-1 bg-[#2a2a2a]"></div>
+						</div>
 						<div class="mt-1 flex flex-wrap items-stretch gap-2">
 							<div class="flex min-w-55 flex-1 gap-2">
 								<input
@@ -806,7 +817,13 @@
 						{/if}
 					</div>
 
-					<p class="pt-1 text-xs text-[#888]">Or enter latitude and longitude directly:</p>
+					<div class="flex items-center gap-3 pt-2 pb-1">
+						<div class="h-px flex-1 bg-[#2a2a2a]"></div>
+						<span class="text-xs font-medium tracking-widest text-[#888] uppercase">
+							or enter coordinates manually
+						</span>
+						<div class="h-px flex-1 bg-[#2a2a2a]"></div>
+					</div>
 
 					<div class="grid grid-cols-2 gap-4">
 						<div>
