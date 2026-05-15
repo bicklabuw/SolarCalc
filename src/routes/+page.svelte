@@ -1050,8 +1050,8 @@
 					Reference & background
 				</h2>
 				<p class="mt-1.5 text-xs leading-relaxed text-[#aaa]">
-					How this calculator works, field tips for deploying panels, and definitions of every
-					term used above. Click any section to expand it.
+					How this calculator works, field tips for deploying panels, and definitions of every term
+					used above. Click any section to expand it.
 				</p>
 			</div>
 
@@ -1064,92 +1064,92 @@
 					How is this calculated?
 				</button>
 
-			{#if methodologyOpen}
-				<div class="mt-4 space-y-3 text-sm leading-relaxed text-[#888]">
-					<div>
-						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							{@render term('Solar irradiance', 'def-irradiance')} data
-						</p>
-						<p>
-							Hourly {@render term('irradiance', 'def-irradiance')} (kWh/m²) is fetched from the {@render term(
-								'NASA POWER API',
-								'def-nasa'
-							)} using the ALLSKY_SFC_SW_DWN parameter, over the same seasonal date range for the years
-							2023–2025.
-						</p>
+				{#if methodologyOpen}
+					<div class="mt-4 space-y-3 text-sm leading-relaxed text-[#888]">
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								{@render term('Solar irradiance', 'def-irradiance')} data
+							</p>
+							<p>
+								Hourly {@render term('irradiance', 'def-irradiance')} (kWh/m²) is fetched from the {@render term(
+									'NASA POWER API',
+									'def-nasa'
+								)} using the ALLSKY_SFC_SW_DWN parameter, over the same seasonal date range for the years
+								2023–2025.
+							</p>
+						</div>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Average vs worst case
+							</p>
+							<p>
+								For each hour of the day, the average profile takes the mean
+								{@render term('irradiance', 'def-irradiance')} across all matching days and years. The
+								worst-case profile takes the single lowest observed value for that hour.
+							</p>
+						</div>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Solar panel output
+							</p>
+							<p>
+								Panel output ({@render term('Wh', 'def-wh')}) =
+								{@render term('irradiance', 'def-irradiance')} ×
+								{@render term('panel rating', 'def-panel')} ×
+								{@render term('number of panels', 'def-numpanels')} × 80% {@render term(
+									'system efficiency',
+									'def-eff'
+								)}.
+							</p>
+							<p class="mt-1 font-mono text-xs text-[#777]">
+								e.g. 0.5 kWh/m² × 100 W × 2 panels × 0.8 = 80 Wh in that hour
+							</p>
+						</div>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Hour-by-hour simulation
+							</p>
+							<p>
+								The {@render term('battery bank', 'def-bank')} charges when solar output exceeds device
+								load and discharges otherwise. Energy beyond the bank's total
+								{@render term('capacity', 'def-wh')} is lost. A configurable
+								{@render term('safety margin', 'def-safety')} (default 30%) is applied to device {@render term(
+									'power draw',
+									'def-w'
+								)}.
+							</p>
+						</div>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								{@render term('N worst days', 'def-worst')} scenario
+							</p>
+							<p>
+								The first (total days − N) days use the average hourly profile. The final N days use
+								the worst-case profile. The bank's charge state carries over naturally between days.
+							</p>
+						</div>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								All worst days scenario
+							</p>
+							<p>
+								Every day uses the worst-case hourly profile. This is the maximum stress test for
+								the system.
+							</p>
+						</div>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Finding the minimum batteries
+							</p>
+							<p>
+								A binary search is run over candidate battery counts. Each candidate is interpreted
+								as a battery bank made of that many batteries wired together. For each candidate,
+								the full simulation is executed. The smallest count that keeps the bank from running
+								out of charge is used.
+							</p>
+						</div>
 					</div>
-					<div>
-						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Average vs worst case
-						</p>
-						<p>
-							For each hour of the day, the average profile takes the mean
-							{@render term('irradiance', 'def-irradiance')} across all matching days and years. The worst-case
-							profile takes the single lowest observed value for that hour.
-						</p>
-					</div>
-					<div>
-						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Solar panel output
-						</p>
-						<p>
-							Panel output ({@render term('Wh', 'def-wh')}) =
-							{@render term('irradiance', 'def-irradiance')} ×
-							{@render term('panel rating', 'def-panel')} ×
-							{@render term('number of panels', 'def-numpanels')} × 80% {@render term(
-								'system efficiency',
-								'def-eff'
-							)}.
-						</p>
-						<p class="mt-1 font-mono text-xs text-[#777]">
-							e.g. 0.5 kWh/m² × 100 W × 2 panels × 0.8 = 80 Wh in that hour
-						</p>
-					</div>
-					<div>
-						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Hour-by-hour simulation
-						</p>
-						<p>
-							The {@render term('battery bank', 'def-bank')} charges when solar output exceeds device
-							load and discharges otherwise. Energy beyond the bank's total
-							{@render term('capacity', 'def-wh')} is lost. A configurable
-							{@render term('safety margin', 'def-safety')} (default 30%) is applied to device {@render term(
-								'power draw',
-								'def-w'
-							)}.
-						</p>
-					</div>
-					<div>
-						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							{@render term('N worst days', 'def-worst')} scenario
-						</p>
-						<p>
-							The first (total days − N) days use the average hourly profile. The final N days use
-							the worst-case profile. The bank's charge state carries over naturally between days.
-						</p>
-					</div>
-					<div>
-						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							All worst days scenario
-						</p>
-						<p>
-							Every day uses the worst-case hourly profile. This is the maximum stress test for the
-							system.
-						</p>
-					</div>
-					<div>
-						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Finding the minimum batteries
-						</p>
-						<p>
-							A binary search is run over candidate battery counts. Each candidate is interpreted as
-							a battery bank made of that many batteries wired together. For each candidate, the
-							full simulation is executed. The smallest count that keeps the bank from running out
-							of charge is used.
-						</p>
-					</div>
-				</div>
-			{/if}
+				{/if}
 			</div>
 
 			<div class="border-t border-[#2a2a2a] pt-4">
@@ -1161,228 +1161,230 @@
 					Solar panel positioning tips
 				</button>
 
-			{#if positioningOpen}
-				<div class="mt-4 space-y-3 text-sm leading-relaxed text-[#888]">
-					<p class="text-[#aaa]">
-						A perfectly sized system still under-performs if the panels are pointed wrong, tilted
-						poorly, or partly shaded. These rules of thumb are the biggest levers. None of them have
-						to be exact, but getting them roughly right makes a real difference.
-					</p>
-					<div>
-						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Facing direction
+				{#if positioningOpen}
+					<div class="mt-4 space-y-3 text-sm leading-relaxed text-[#888]">
+						<p class="text-[#aaa]">
+							A perfectly sized system still under-performs if the panels are pointed wrong, tilted
+							poorly, or partly shaded. These rules of thumb are the biggest levers. None of them
+							have to be exact, but getting them roughly right makes a real difference.
 						</p>
-						<p>
-							In the Northern Hemisphere (positive latitude), aim panels at <em>true south</em>. In
-							the Southern Hemisphere (negative latitude), aim at <em>true north</em>. True
-							south&thinsp;/&thinsp;north is not the same as magnetic south&thinsp;/&thinsp;north;
-							the two can differ by 10–20° depending on where you are, so check the magnetic
-							declination for your site if you're aligning with a compass. Near the equator, the
-							optimal direction matters less and a near-flat panel works well. Within roughly ±20°
-							of true south&thinsp;/&thinsp;north the loss is small, so don't worry about being
-							pixel-perfect.
-						</p>
-					</div>
-					<div>
-						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Tilt angle
-						</p>
-						<p>
-							<span class="font-semibold text-[#aaa]">Tilt</span> is the angle between the panel
-							face and the flat ground. <span class="font-semibold text-[#aaa]">0°</span> means the
-							panel is lying flat, face pointed straight up at the sky.
-							<span class="font-semibold text-[#aaa]">90°</span>
-							means the panel is standing on its edge, perpendicular to the ground (its face pointed sideways
-							at the horizon).
-						</p>
-						<div
-							class="my-2 space-y-1 rounded-sm border border-[#2a2a2a] bg-[#141414] py-3 font-mono text-xs text-[#888]"
-						>
-							<div class="flex items-end justify-around gap-3">
-								<div class="flex flex-col items-center gap-1">
-									<svg width="84" height="60" viewBox="0 0 84 60" aria-hidden="true">
-										<line x1="6" y1="50" x2="78" y2="50" stroke="#555" stroke-width="1.5" />
-										<!-- Panel sits directly on the ground (bottom at y=50) -->
-										<rect x="18" y="47" width="48" height="3" fill="#f59e0b" />
-										<!-- Sun above (face is up) -->
-										<g>
-											<circle cx="42" cy="14" r="3" fill="#fbbf24" />
-											<g stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round">
-												<line x1="42" y1="6" x2="42" y2="8" />
-												<line x1="42" y1="20" x2="42" y2="22" />
-												<line x1="34" y1="14" x2="36" y2="14" />
-												<line x1="48" y1="14" x2="50" y2="14" />
-												<line x1="36.5" y1="8.5" x2="37.7" y2="9.7" />
-												<line x1="46.3" y1="9.7" x2="47.5" y2="8.5" />
-												<line x1="36.5" y1="19.5" x2="37.7" y2="18.3" />
-												<line x1="46.3" y1="18.3" x2="47.5" y2="19.5" />
-											</g>
-										</g>
-										<!-- Sun rays hitting the face (extend down to the panel top) -->
-										<g stroke="#fbbf24" stroke-width="0.7" stroke-dasharray="2,2" opacity="0.6">
-											<line x1="34" y1="24" x2="34" y2="45" />
-											<line x1="42" y1="24" x2="42" y2="45" />
-											<line x1="50" y1="24" x2="50" y2="45" />
-										</g>
-										<text x="66" y="34" text-anchor="middle" font-size="12" fill="#aaa">0°</text>
-									</svg>
-									<span>flat (face up)</span>
-								</div>
-								<div class="flex flex-col items-center gap-1">
-									<svg width="84" height="60" viewBox="0 0 84 60" aria-hidden="true">
-										<line x1="6" y1="50" x2="78" y2="50" stroke="#555" stroke-width="1.5" />
-										<g transform="rotate(-43 18 50)">
-											<rect x="18" y="48.5" width="48" height="3" fill="#f59e0b" />
-										</g>
-										<!-- Sun upper-left (face points up-left after -43° rotation) -->
-										<g>
-											<circle cx="14" cy="12" r="3" fill="#fbbf24" />
-											<g stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round">
-												<line x1="14" y1="4" x2="14" y2="6" />
-												<line x1="14" y1="18" x2="14" y2="20" />
-												<line x1="6" y1="12" x2="8" y2="12" />
-												<line x1="20" y1="12" x2="22" y2="12" />
-												<line x1="8.5" y1="6.5" x2="9.7" y2="7.7" />
-												<line x1="18.3" y1="7.7" x2="19.5" y2="6.5" />
-												<line x1="8.5" y1="17.5" x2="9.7" y2="16.3" />
-												<line x1="18.3" y1="16.3" x2="19.5" y2="17.5" />
-											</g>
-										</g>
-										<!-- Rays hitting the upper-left edge of the tilted panel -->
-										<g stroke="#fbbf24" stroke-width="0.7" stroke-dasharray="2,2" opacity="0.6">
-											<line x1="18" y1="18" x2="26" y2="32" />
-											<line x1="25" y1="16" x2="34" y2="26" />
-										</g>
-										<!-- Angle arc -->
-										<path
-											d="M 34 50 A 16 16 0 0 0 29.3 38.9"
-											fill="none"
-											stroke="#888"
-											stroke-width="0.8"
-										/>
-										<text x="62" y="40" text-anchor="middle" font-size="12" fill="#aaa">~43°</text>
-									</svg>
-									<span>~latitude</span>
-								</div>
-								<div class="flex flex-col items-center gap-1">
-									<svg width="84" height="60" viewBox="0 0 84 60" aria-hidden="true">
-										<line x1="6" y1="50" x2="78" y2="50" stroke="#555" stroke-width="1.5" />
-										<rect x="40" y="8" width="3" height="42" fill="#f59e0b" />
-										<!-- Sun on the LEFT (face points left when vertical) -->
-										<g>
-											<circle cx="14" cy="28" r="3" fill="#fbbf24" />
-											<g stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round">
-												<line x1="14" y1="20" x2="14" y2="22" />
-												<line x1="14" y1="34" x2="14" y2="36" />
-												<line x1="6" y1="28" x2="8" y2="28" />
-												<line x1="20" y1="28" x2="22" y2="28" />
-												<line x1="8.5" y1="22.5" x2="9.7" y2="23.7" />
-												<line x1="18.3" y1="23.7" x2="19.5" y2="22.5" />
-												<line x1="8.5" y1="33.5" x2="9.7" y2="32.3" />
-												<line x1="18.3" y1="32.3" x2="19.5" y2="33.5" />
-											</g>
-										</g>
-										<!-- Horizontal rays hitting the left face of the vertical panel -->
-										<g stroke="#fbbf24" stroke-width="0.7" stroke-dasharray="2,2" opacity="0.6">
-											<line x1="22" y1="18" x2="38" y2="18" />
-											<line x1="22" y1="28" x2="38" y2="28" />
-											<line x1="22" y1="38" x2="38" y2="38" />
-										</g>
-										<!-- Angle arc -->
-										<path
-											d="M 56 50 A 16 16 0 0 0 43 36"
-											fill="none"
-											stroke="#888"
-											stroke-width="0.8"
-										/>
-										<text x="66" y="30" text-anchor="middle" font-size="12" fill="#aaa">90°</text>
-									</svg>
-									<span>vertical</span>
-								</div>
-							</div>
-							<p class="mt-4 px-3 text-center text-xs text-[#888]">
-								<svg
-									class="inline-block align-middle"
-									width="16"
-									height="16"
-									viewBox="0 0 14 14"
-									aria-hidden="true"
-								>
-									<circle cx="7" cy="7" r="2.5" fill="#fbbf24" />
-									<g stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round">
-										<line x1="7" y1="1.5" x2="7" y2="3" />
-										<line x1="7" y1="11" x2="7" y2="12.5" />
-										<line x1="1.5" y1="7" x2="3" y2="7" />
-										<line x1="11" y1="7" x2="12.5" y2="7" />
-										<line x1="3" y1="3" x2="4" y2="4" />
-										<line x1="10" y1="4" x2="11" y2="3" />
-										<line x1="3" y1="11" x2="4" y2="10" />
-										<line x1="10" y1="10" x2="11" y2="11" />
-									</g>
-								</svg>
-								= where the panel face points (the glass / sun-catching side)
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Facing direction
+							</p>
+							<p>
+								In the Northern Hemisphere (positive latitude), aim panels at <em>true south</em>.
+								In the Southern Hemisphere (negative latitude), aim at <em>true north</em>. True
+								south&thinsp;/&thinsp;north is not the same as magnetic south&thinsp;/&thinsp;north;
+								the two can differ by 10–20° depending on where you are, so check the magnetic
+								declination for your site if you're aligning with a compass. Near the equator, the
+								optimal direction matters less and a near-flat panel works well. Within roughly ±20°
+								of true south&thinsp;/&thinsp;north the loss is small, so don't worry about being
+								pixel-perfect.
 							</p>
 						</div>
-						<p>
-							A reasonable year-round tilt is roughly <em>equal to your latitude</em> (e.g.&nbsp;~43°
-							at Madison, Wisconsin). It does not need to be exact (within ~10° of latitude only costs
-							a few percent of annual output) so being roughly right matters far more than getting the
-							exact degree.
-						</p>
-						<p class="mt-1">
-							If most of your energy demand falls in <em>winter</em> (when the sun is low in the
-							sky), add about 15° to your tilt to face it. If most of your demand falls in
-							<em>summer</em> (when the sun is high overhead), subtract about 15°. By
-							<em>winter&thinsp;/&thinsp;summer-heavy</em> we mean the season when you most need power,
-							not just when you're deployed. Near the spring and fall equinoxes the sun tracks close to
-							the celestial equator, so a tilt equal to your latitude is already near-optimal and no seasonal
-							adjustment is needed. A small tilt also helps panels self-clean in the rain.
-						</p>
-					</div>
-					<div>
-						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Avoid shading (this one really matters)
-						</p>
-						<p>
-							<span class="font-semibold text-[#aaa]"
-								>Keep the panel completely clear of obstructions.</span
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Tilt angle
+							</p>
+							<p>
+								<span class="font-semibold text-[#aaa]">Tilt</span> is the angle between the panel
+								face and the flat ground. <span class="font-semibold text-[#aaa]">0°</span> means
+								the panel is lying flat, face pointed straight up at the sky.
+								<span class="font-semibold text-[#aaa]">90°</span>
+								means the panel is standing on its edge, perpendicular to the ground (its face pointed
+								sideways at the horizon).
+							</p>
+							<div
+								class="my-2 space-y-1 rounded-sm border border-[#2a2a2a] bg-[#141414] py-3 font-mono text-xs text-[#888]"
 							>
-							Even a tiny shadow, from a single leaf, a thin tree branch, a fence wire, an antenna, or
-							a nearby pole, can dramatically cut a panel's output, often by far more than the shaded
-							area would suggest. This is because the cells inside a panel are wired in series. Think
-							of it like cars on a single-lane road: every car behind a slow one is stuck moving at the
-							slow car's speed, no matter how fast they could otherwise go. In a panel, every cell in
-							the string is throttled to whatever the worst-lit cell can produce, so shading just one
-							cell can choke the entire panel.
-						</p>
-						<p class="mt-1">
-							Trace the sun's path across the sky for every season you'll be deployed, not just at
-							install time, and check that no tree, building, equipment box, or piece of vegetation
-							will cast a shadow at any time of day. When in doubt, give the panel more open sky.
-						</p>
+								<div class="flex items-end justify-around gap-3">
+									<div class="flex flex-col items-center gap-1">
+										<svg width="84" height="60" viewBox="0 0 84 60" aria-hidden="true">
+											<line x1="6" y1="50" x2="78" y2="50" stroke="#555" stroke-width="1.5" />
+											<!-- Panel sits directly on the ground (bottom at y=50) -->
+											<rect x="18" y="47" width="48" height="3" fill="#f59e0b" />
+											<!-- Sun above (face is up) -->
+											<g>
+												<circle cx="42" cy="14" r="3" fill="#fbbf24" />
+												<g stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round">
+													<line x1="42" y1="6" x2="42" y2="8" />
+													<line x1="42" y1="20" x2="42" y2="22" />
+													<line x1="34" y1="14" x2="36" y2="14" />
+													<line x1="48" y1="14" x2="50" y2="14" />
+													<line x1="36.5" y1="8.5" x2="37.7" y2="9.7" />
+													<line x1="46.3" y1="9.7" x2="47.5" y2="8.5" />
+													<line x1="36.5" y1="19.5" x2="37.7" y2="18.3" />
+													<line x1="46.3" y1="18.3" x2="47.5" y2="19.5" />
+												</g>
+											</g>
+											<!-- Sun rays hitting the face (extend down to the panel top) -->
+											<g stroke="#fbbf24" stroke-width="0.7" stroke-dasharray="2,2" opacity="0.6">
+												<line x1="34" y1="24" x2="34" y2="45" />
+												<line x1="42" y1="24" x2="42" y2="45" />
+												<line x1="50" y1="24" x2="50" y2="45" />
+											</g>
+											<text x="66" y="34" text-anchor="middle" font-size="12" fill="#aaa">0°</text>
+										</svg>
+										<span>flat (face up)</span>
+									</div>
+									<div class="flex flex-col items-center gap-1">
+										<svg width="84" height="60" viewBox="0 0 84 60" aria-hidden="true">
+											<line x1="6" y1="50" x2="78" y2="50" stroke="#555" stroke-width="1.5" />
+											<g transform="rotate(-43 18 50)">
+												<rect x="18" y="48.5" width="48" height="3" fill="#f59e0b" />
+											</g>
+											<!-- Sun upper-left (face points up-left after -43° rotation) -->
+											<g>
+												<circle cx="14" cy="12" r="3" fill="#fbbf24" />
+												<g stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round">
+													<line x1="14" y1="4" x2="14" y2="6" />
+													<line x1="14" y1="18" x2="14" y2="20" />
+													<line x1="6" y1="12" x2="8" y2="12" />
+													<line x1="20" y1="12" x2="22" y2="12" />
+													<line x1="8.5" y1="6.5" x2="9.7" y2="7.7" />
+													<line x1="18.3" y1="7.7" x2="19.5" y2="6.5" />
+													<line x1="8.5" y1="17.5" x2="9.7" y2="16.3" />
+													<line x1="18.3" y1="16.3" x2="19.5" y2="17.5" />
+												</g>
+											</g>
+											<!-- Rays hitting the upper-left edge of the tilted panel -->
+											<g stroke="#fbbf24" stroke-width="0.7" stroke-dasharray="2,2" opacity="0.6">
+												<line x1="18" y1="18" x2="26" y2="32" />
+												<line x1="25" y1="16" x2="34" y2="26" />
+											</g>
+											<!-- Angle arc -->
+											<path
+												d="M 34 50 A 16 16 0 0 0 29.3 38.9"
+												fill="none"
+												stroke="#888"
+												stroke-width="0.8"
+											/>
+											<text x="62" y="40" text-anchor="middle" font-size="12" fill="#aaa">~43°</text
+											>
+										</svg>
+										<span>~latitude</span>
+									</div>
+									<div class="flex flex-col items-center gap-1">
+										<svg width="84" height="60" viewBox="0 0 84 60" aria-hidden="true">
+											<line x1="6" y1="50" x2="78" y2="50" stroke="#555" stroke-width="1.5" />
+											<rect x="40" y="8" width="3" height="42" fill="#f59e0b" />
+											<!-- Sun on the LEFT (face points left when vertical) -->
+											<g>
+												<circle cx="14" cy="28" r="3" fill="#fbbf24" />
+												<g stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round">
+													<line x1="14" y1="20" x2="14" y2="22" />
+													<line x1="14" y1="34" x2="14" y2="36" />
+													<line x1="6" y1="28" x2="8" y2="28" />
+													<line x1="20" y1="28" x2="22" y2="28" />
+													<line x1="8.5" y1="22.5" x2="9.7" y2="23.7" />
+													<line x1="18.3" y1="23.7" x2="19.5" y2="22.5" />
+													<line x1="8.5" y1="33.5" x2="9.7" y2="32.3" />
+													<line x1="18.3" y1="32.3" x2="19.5" y2="33.5" />
+												</g>
+											</g>
+											<!-- Horizontal rays hitting the left face of the vertical panel -->
+											<g stroke="#fbbf24" stroke-width="0.7" stroke-dasharray="2,2" opacity="0.6">
+												<line x1="22" y1="18" x2="38" y2="18" />
+												<line x1="22" y1="28" x2="38" y2="28" />
+												<line x1="22" y1="38" x2="38" y2="38" />
+											</g>
+											<!-- Angle arc -->
+											<path
+												d="M 56 50 A 16 16 0 0 0 43 36"
+												fill="none"
+												stroke="#888"
+												stroke-width="0.8"
+											/>
+											<text x="66" y="30" text-anchor="middle" font-size="12" fill="#aaa">90°</text>
+										</svg>
+										<span>vertical</span>
+									</div>
+								</div>
+								<p class="mt-4 px-3 text-center text-xs text-[#888]">
+									<svg
+										class="inline-block align-middle"
+										width="16"
+										height="16"
+										viewBox="0 0 14 14"
+										aria-hidden="true"
+									>
+										<circle cx="7" cy="7" r="2.5" fill="#fbbf24" />
+										<g stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round">
+											<line x1="7" y1="1.5" x2="7" y2="3" />
+											<line x1="7" y1="11" x2="7" y2="12.5" />
+											<line x1="1.5" y1="7" x2="3" y2="7" />
+											<line x1="11" y1="7" x2="12.5" y2="7" />
+											<line x1="3" y1="3" x2="4" y2="4" />
+											<line x1="10" y1="4" x2="11" y2="3" />
+											<line x1="3" y1="11" x2="4" y2="10" />
+											<line x1="10" y1="10" x2="11" y2="11" />
+										</g>
+									</svg>
+									= where the panel face points (the glass / sun-catching side)
+								</p>
+							</div>
+							<p>
+								A reasonable year-round tilt is roughly <em>equal to your latitude</em> (e.g.&nbsp;~43°
+								at Madison, Wisconsin). It does not need to be exact (within ~10° of latitude only costs
+								a few percent of annual output) so being roughly right matters far more than getting the
+								exact degree.
+							</p>
+							<p class="mt-1">
+								If most of your energy demand falls in <em>winter</em> (when the sun is low in the
+								sky), add about 15° to your tilt to face it. If most of your demand falls in
+								<em>summer</em> (when the sun is high overhead), subtract about 15°. By
+								<em>winter&thinsp;/&thinsp;summer-heavy</em> we mean the season when you most need power,
+								not just when you're deployed. Near the spring and fall equinoxes the sun tracks close
+								to the celestial equator, so a tilt equal to your latitude is already near-optimal and
+								no seasonal adjustment is needed. A small tilt also helps panels self-clean in the rain.
+							</p>
+						</div>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Avoid shading (this one really matters)
+							</p>
+							<p>
+								<span class="font-semibold text-[#aaa]"
+									>Keep the panel completely clear of obstructions.</span
+								>
+								Even a tiny shadow, from a single leaf, a thin tree branch, a fence wire, an antenna,
+								or a nearby pole, can dramatically cut a panel's output, often by far more than the shaded
+								area would suggest. This is because the cells inside a panel are wired in series. Think
+								of it like cars on a single-lane road: every car behind a slow one is stuck moving at
+								the slow car's speed, no matter how fast they could otherwise go. In a panel, every cell
+								in the string is throttled to whatever the worst-lit cell can produce, so shading just
+								one cell can choke the entire panel.
+							</p>
+							<p class="mt-1">
+								Trace the sun's path across the sky for every season you'll be deployed, not just at
+								install time, and check that no tree, building, equipment box, or piece of
+								vegetation will cast a shadow at any time of day. When in doubt, give the panel more
+								open sky.
+							</p>
+						</div>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Keep them clean
+							</p>
+							<p>
+								Dust, bird droppings, pollen, snow, and fallen leaves all reduce output. In dusty or
+								rural deployments, plan for periodic cleaning or de-rate the system further with the
+								safety margin above.
+							</p>
+						</div>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Mounting and ventilation
+							</p>
+							<p>
+								Hot panels are less efficient. Leave a small air gap behind the panel so it can shed
+								heat, and secure it well enough to handle local wind loads. Cables should be strain-
+								relieved and shaded from direct sun where possible.
+							</p>
+						</div>
 					</div>
-					<div>
-						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Keep them clean
-						</p>
-						<p>
-							Dust, bird droppings, pollen, snow, and fallen leaves all reduce output. In dusty or
-							rural deployments, plan for periodic cleaning or de-rate the system further with the
-							safety margin above.
-						</p>
-					</div>
-					<div>
-						<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Mounting and ventilation
-						</p>
-						<p>
-							Hot panels are less efficient. Leave a small air gap behind the panel so it can shed
-							heat, and secure it well enough to handle local wind loads. Cables should be strain-
-							relieved and shaded from direct sun where possible.
-						</p>
-					</div>
-				</div>
-			{/if}
+				{/if}
 			</div>
 
 			<div class="border-t border-[#2a2a2a] pt-4">
@@ -1394,174 +1396,178 @@
 					Definitions
 				</button>
 
-			{#if definitionsOpen}
-				<dl class="mt-4 space-y-3 text-sm leading-relaxed text-[#888]">
-					<div id="def-w" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Watt (W) - power
-						</dt>
-						<dd>
-							The instantaneous rate of energy use. A 4 W device consumes 4 joules every second.
-							Power draw is constant in this model. The device is always on.
-						</dd>
-					</div>
+				{#if definitionsOpen}
+					<dl class="mt-4 space-y-3 text-sm leading-relaxed text-[#888]">
+						<div id="def-w" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Watt (W) - power
+							</dt>
+							<dd>
+								The instantaneous rate of energy use. A 4 W device consumes 4 joules every second.
+								Power draw is constant in this model. The device is always on.
+							</dd>
+						</div>
 
-					<div id="def-wh" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Watt-hour (Wh) - energy
-						</dt>
-						<dd>
-							Energy used (or stored) over time. 1 Wh = running 1 W for 1 hour. Battery capacity is
-							measured in Wh. The "Battery capacity" input above is the capacity of one individual
-							battery; a {@render term('battery bank', 'def-bank')} of N such batteries holds N times
-							that capacity. A single 1000 Wh battery can power a 4 W device for about 250 hours (1000
-							÷ 4) in ideal conditions.
-						</dd>
-						<dd class="mt-1 font-mono text-xs text-[#666]">
-							Wh = W × hours · e.g. 4 W × 24 h = 96 Wh/day
-						</dd>
-					</div>
+						<div id="def-wh" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Watt-hour (Wh) - energy
+							</dt>
+							<dd>
+								Energy used (or stored) over time. 1 Wh = running 1 W for 1 hour. Battery capacity
+								is measured in Wh. The "Battery capacity" input above is the capacity of one
+								individual battery; a {@render term('battery bank', 'def-bank')} of N such batteries holds
+								N times that capacity. A single 1000 Wh battery can power a 4 W device for about 250 hours
+								(1000 ÷ 4) in ideal conditions.
+							</dd>
+							<dd class="mt-1 font-mono text-xs text-[#666]">
+								Wh = W × hours · e.g. 4 W × 24 h = 96 Wh/day
+							</dd>
+						</div>
 
-					<div id="def-ah" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Amp-hour (Ah) - charge
-						</dt>
-						<dd>
-							A measure of charge often printed on lead-acid and lithium batteries. By itself it
-							doesn't tell you how much energy is stored. You also need the battery's nominal
-							voltage.
-						</dd>
-						<dd class="mt-1 font-mono text-xs text-[#666]">
-							Ah × V = Wh · e.g. 100 Ah × 12 V = 1200 Wh
-						</dd>
-					</div>
+						<div id="def-ah" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Amp-hour (Ah) - charge
+							</dt>
+							<dd>
+								A measure of charge often printed on lead-acid and lithium batteries. By itself it
+								doesn't tell you how much energy is stored. You also need the battery's nominal
+								voltage.
+							</dd>
+							<dd class="mt-1 font-mono text-xs text-[#666]">
+								Ah × V = Wh · e.g. 100 Ah × 12 V = 1200 Wh
+							</dd>
+						</div>
 
-					<div id="def-v" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Volt (V) - nominal voltage
-						</dt>
-						<dd>
-							The battery's nominal voltage (commonly 12 V, 24 V, or 48 V for off-grid systems).
-							Multiply Ah by V to get the Wh capacity used by this calculator.
-						</dd>
-					</div>
+						<div id="def-v" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Volt (V) - nominal voltage
+							</dt>
+							<dd>
+								The battery's nominal voltage (commonly 12 V, 24 V, or 48 V for off-grid systems).
+								Multiply Ah by V to get the Wh capacity used by this calculator.
+							</dd>
+						</div>
 
-					<div id="def-irradiance" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							SOLAR IRRADIANCE (kWh/m²)
-						</dt>
-						<dd>
-							The solar energy striking one square metre of ground in a given hour. A clear noon
-							hour might be ~1 kWh/m²; a cloudy morning closer to 0.1 kWh/m². This calculator treats
-							the panel rating as the wattage produced under 1 kW/m² of irradiance, then scales
-							linearly with the actual irradiance value.
-						</dd>
-					</div>
+						<div id="def-irradiance" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								SOLAR IRRADIANCE (kWh/m²)
+							</dt>
+							<dd>
+								The solar energy striking one square metre of ground in a given hour. A clear noon
+								hour might be ~1 kWh/m²; a cloudy morning closer to 0.1 kWh/m². This calculator
+								treats the panel rating as the wattage produced under 1 kW/m² of irradiance, then
+								scales linearly with the actual irradiance value.
+							</dd>
+						</div>
 
-					<div id="def-panel" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Panel rating (W)
-						</dt>
-						<dd>
-							The peak wattage a solar panel produces under standard test conditions (1 kW/m²
-							irradiance, 25 °C). A "100 W" panel rarely delivers 100 W in the field; actual output
-							depends on irradiance and system losses.
-						</dd>
-					</div>
+						<div id="def-panel" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Panel rating (W)
+							</dt>
+							<dd>
+								The peak wattage a solar panel produces under standard test conditions (1 kW/m²
+								irradiance, 25 °C). A "100 W" panel rarely delivers 100 W in the field; actual
+								output depends on irradiance and system losses.
+							</dd>
+						</div>
 
-					<div id="def-numpanels" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Number of panels
-						</dt>
-						<dd>
-							How many identical panels are wired into a single group. Output is assumed to scale
-							linearly: two 100 W panels behave like one 200 W panel.
-						</dd>
-					</div>
+						<div id="def-numpanels" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Number of panels
+							</dt>
+							<dd>
+								How many identical panels are wired into a single group. Output is assumed to scale
+								linearly: two 100 W panels behave like one 200 W panel.
+							</dd>
+						</div>
 
-					<div id="def-eff" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							System efficiency (80%)
-						</dt>
-						<dd>
-							A flat de-rating applied to raw panel output to account for wiring losses, charge
-							controller / inverter inefficiency, soiling, and temperature effects. 80% is a common
-							rule-of-thumb for well-installed off-grid systems.
-						</dd>
-					</div>
+						<div id="def-eff" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								System efficiency (80%)
+							</dt>
+							<dd>
+								A flat de-rating applied to raw panel output to account for wiring losses, charge
+								controller / inverter inefficiency, soiling, and temperature effects. 80% is a
+								common rule-of-thumb for well-installed off-grid systems.
+							</dd>
+						</div>
 
-					<div id="def-safety" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Safety margin (%)
-						</dt>
-						<dd>
-							An extra buffer added to device power draw when sizing batteries. A 30% margin treats
-							a 4 W device as if it draws 5.2 W, so the system is sized against unexpected load
-							spikes or under-performance.
-						</dd>
-					</div>
+						<div id="def-safety" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Safety margin (%)
+							</dt>
+							<dd>
+								An extra buffer added to device power draw when sizing batteries. A 30% margin
+								treats a 4 W device as if it draws 5.2 W, so the system is sized against unexpected
+								load spikes or under-performance.
+							</dd>
+						</div>
 
-					<div id="def-group" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">Group</dt>
-						<dd>
-							A set of devices powered by a single, shared power system (one
-							{@render term('battery bank', 'def-bank')}, plus one set of solar panels in solar
-							mode). A group does not have to map to a single physical site. Use multiple groups
-							whenever your devices need to be split across more than one independent power system,
-							whether because they're at different locations or because one bank can't handle them
-							all.
-						</dd>
-					</div>
+						<div id="def-group" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">Group</dt>
+							<dd>
+								A set of devices powered by a single, shared power system (one
+								{@render term('battery bank', 'def-bank')}, plus one set of solar panels in solar
+								mode). A group does not have to map to a single physical site. Use multiple groups
+								whenever your devices need to be split across more than one independent power
+								system, whether because they're at different locations or because one bank can't
+								handle them all.
+							</dd>
+						</div>
 
-					<div id="def-bank" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">Battery bank</dt>
-						<dd>
-							The full energy store for one group: one or more individual
-							{@render term('Wh', 'def-wh')}-rated batteries wired together so they share the load
-							and behave like a single, larger battery. When this calculator says "the bank" or
-							"battery bank" it means this whole collection; when it says "batteries" (plural) or
-							gives a count, it means the number of individual units that make up the bank. All
-							batteries in a bank are assumed to be the same model with the same capacity.
-						</dd>
-					</div>
+						<div id="def-bank" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Battery bank
+							</dt>
+							<dd>
+								The full energy store for one group: one or more individual
+								{@render term('Wh', 'def-wh')}-rated batteries wired together so they share the load
+								and behave like a single, larger battery. When this calculator says "the bank" or
+								"battery bank" it means this whole collection; when it says "batteries" (plural) or
+								gives a count, it means the number of individual units that make up the bank. All
+								batteries in a bank are assumed to be the same model with the same capacity.
+							</dd>
+						</div>
 
-					<div id="def-latlong" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							Latitude / Longitude
-						</dt>
-						<dd>
-							Coordinates of your field site, used to look up historical solar irradiance. Latitude
-							is north–south (−90 to 90); longitude is east–west (−180 to 180).
-						</dd>
-					</div>
+						<div id="def-latlong" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Latitude / Longitude
+							</dt>
+							<dd>
+								Coordinates of your field site, used to look up historical solar irradiance.
+								Latitude is north–south (−90 to 90); longitude is east–west (−180 to 180).
+							</dd>
+						</div>
 
-					<div id="def-worst" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">N WORST DAYS</dt>
-						<dd>
-							For each hour of the day, the worst observed irradiance across the historical record
-							is taken, and the last N days of the simulation use this worst-case profile. Placing
-							the bad stretch right at the <em>end</em> of the deployment is the worst-case timing: if
-							the same overcast stretch happened anywhere earlier in the experiment, the battery would
-							have had time to recharge afterward and would finish with equal or more energy left. By
-							assuming the bad weather comes last (when the battery has the least chance to recover),
-							we size the battery for the toughest possible scenario.
-						</dd>
-					</div>
+						<div id="def-worst" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								N WORST DAYS
+							</dt>
+							<dd>
+								For each hour of the day, the worst observed irradiance across the historical record
+								is taken, and the last N days of the simulation use this worst-case profile. Placing
+								the bad stretch right at the <em>end</em> of the deployment is the worst-case timing:
+								if the same overcast stretch happened anywhere earlier in the experiment, the battery
+								would have had time to recharge afterward and would finish with equal or more energy left.
+								By assuming the bad weather comes last (when the battery has the least chance to recover),
+								we size the battery for the toughest possible scenario.
+							</dd>
+						</div>
 
-					<div id="def-nasa" class="px-2 py-1">
-						<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-							NASA POWER API
-						</dt>
-						<dd>
-							A public NASA dataset providing hourly historical solar and meteorological data
-							anywhere on Earth. This calculator queries the
-							<span class="font-mono text-[#aaa]">ALLSKY_SFC_SW_DWN</span> parameter (all-sky surface
-							shortwave downward irradiance) for 2023–2025 in the same seasonal window as the user's date
-							range.
-						</dd>
-					</div>
-				</dl>
-			{/if}
+						<div id="def-nasa" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								NASA POWER API
+							</dt>
+							<dd>
+								A public NASA dataset providing hourly historical solar and meteorological data
+								anywhere on Earth. This calculator queries the
+								<span class="font-mono text-[#aaa]">ALLSKY_SFC_SW_DWN</span> parameter (all-sky surface
+								shortwave downward irradiance) for 2023–2025 in the same seasonal window as the user's
+								date range.
+							</dd>
+						</div>
+					</dl>
+				{/if}
 			</div>
 		</section>
 	</div>
