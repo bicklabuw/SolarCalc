@@ -1,2 +1,66 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
+
+/* Whole app is dark — let the browser render native controls (number-input
+   spinners, date pickers, scrollbars) in dark-mode colors instead of the
+   default black-on-light glyphs that vanish on this background. */
+:root {
+	color-scheme: dark;
+}
+
+/* Definition link styling: used by inline term references that scroll
+   to and flash the matching entry in the Definitions accordion. */
+.def-link {
+	color: #c89668;
+	cursor: help;
+	background: none;
+	padding: 0;
+	font: inherit;
+	letter-spacing: inherit;
+	text-transform: inherit;
+	border: 0;
+	border-bottom: 1px dotted transparent;
+	text-decoration: none;
+	transition:
+		color 0.15s ease,
+		border-bottom-color 0.15s ease;
+}
+.def-link:hover,
+.def-link:focus-visible {
+	color: #e0b67f;
+	border-bottom-color: rgba(224, 182, 127, 0.6);
+	outline: none;
+}
+
+@keyframes def-flash {
+	0% {
+		background-color: rgba(245, 158, 11, 0);
+		box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+	}
+	20% {
+		background-color: rgba(245, 158, 11, 0.18);
+		box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.18);
+	}
+	100% {
+		background-color: rgba(245, 158, 11, 0);
+		box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+	}
+}
+.def-flash {
+	animation: def-flash 1.6s ease-out;
+	border-radius: 4px;
+}
+
+/* Make number-input increment / decrement controls visible on dark UI.
+   `color-scheme: dark` tells the browser to render its native form controls
+   (including spinner arrows) in dark-mode colors, so the arrow glyphs become
+   light on dark instead of black-on-dark and invisible. */
+input[type='number'] {
+	color-scheme: dark;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+	opacity: 1;
+	cursor: pointer;
+}
