@@ -1,3 +1,5 @@
+import SolarWorker from './solar-worker.ts?worker';
+
 export type GroupOutput = {
 	devices: number;
 	totalEnergyWh: number;
@@ -71,9 +73,7 @@ export async function calculateWithSolar(
 		batteriesOnly.groups.map(
 			(group, i) =>
 				new Promise<{ batteries: number; chargeHistory: number[] }>((resolve, reject) => {
-					const worker = new Worker(new URL('./solar-worker.ts', import.meta.url), {
-						type: 'module'
-					});
+					const worker = new SolarWorker();
 					worker.postMessage({
 						devices: group.devices,
 						numDays,

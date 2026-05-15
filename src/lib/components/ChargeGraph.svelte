@@ -18,7 +18,7 @@
 	const LINE_COLORS = ['#6c7eb8', '#5fa87a', '#9b7fc0', '#b87a5f', '#5fb8b3'];
 	const ACCENT = '#f59e0b';
 
-	// Maximum number of labeled day ticks on the x-axis — adjust here to change density
+	// Maximum number of labeled day ticks on the x-axis. Adjust here to change density
 	const MAX_X_LABELS = 14;
 
 	const maxCapacity = $derived(

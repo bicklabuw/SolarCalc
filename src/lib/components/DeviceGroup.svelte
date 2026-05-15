@@ -17,7 +17,9 @@
 	const placeholder = $derived(`Group ${index + 1}`);
 </script>
 
-<div class="flex items-center gap-3 rounded-sm bg-[#1a1a1a] px-3 py-2">
+<div
+	class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-sm border border-l-2 border-[#2a2a2a] border-l-[#f59e0b]/30 bg-[#1a1a1a] px-3 py-2"
+>
 	<input
 		type="text"
 		bind:value={group.name}
@@ -30,19 +32,21 @@
 		<input
 			type="number"
 			bind:value={group.devices}
+			placeholder="Ex: 4"
 			min="1"
-			class="w-16 rounded-sm border border-[#333] bg-[#0f0f0f] px-2 py-0.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
+			class="w-20 rounded-sm border border-[#333] bg-[#0f0f0f] px-2 py-0.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
 		/>
 	</label>
 
 	{#if showSolarInputs}
 		<label class="flex items-center gap-1.5 text-sm text-[#888]">
-			<span>Panels</span>
+			<span>Solar panels</span>
 			<input
 				type="number"
 				bind:value={group.panels}
+				placeholder="Ex: 1"
 				min="0"
-				class="w-16 rounded-sm border border-[#333] bg-[#0f0f0f] px-2 py-0.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
+				class="w-20 rounded-sm border border-[#333] bg-[#0f0f0f] px-2 py-0.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
 			/>
 		</label>
 	{/if}

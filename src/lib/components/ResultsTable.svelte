@@ -62,8 +62,8 @@
 			{#each groups as group, i (i)}
 				<tr class="border-b border-[#1f1f1f]">
 					<td class="py-1.5 text-[#e8e8e8]">{group.name || `Group ${i + 1}`}</td>
-					<td class="py-1.5 text-right font-mono text-[#e8e8e8]">{group.batteriesN ?? '—'}</td>
-					<td class="py-1.5 text-right font-mono text-[#e8e8e8]">{group.batteriesAll ?? '—'}</td>
+					<td class="py-1.5 text-right font-mono text-[#e8e8e8]">{group.batteriesN ?? '-'}</td>
+					<td class="py-1.5 text-right font-mono text-[#e8e8e8]">{group.batteriesAll ?? '-'}</td>
 				</tr>
 			{/each}
 		</tbody>
@@ -76,10 +76,10 @@
 			<tr>
 				<td class="pt-1 text-xs text-[#888]">vs battery-only</td>
 				<td class="pt-1 text-right font-mono text-xs text-[#5fa87a]">
-					{reductionN > 0 ? `-${reductionN} (${pctN}%)` : '—'}
+					{reductionN > 0 ? `-${reductionN} (${pctN}%)` : '-'}
 				</td>
 				<td class="pt-1 text-right font-mono text-xs text-[#5fa87a]">
-					{reductionAll > 0 ? `-${reductionAll} (${pctAll}%)` : '—'}
+					{reductionAll > 0 ? `-${reductionAll} (${pctAll}%)` : '-'}
 				</td>
 			</tr>
 		</tfoot>
