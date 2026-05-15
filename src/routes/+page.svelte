@@ -417,9 +417,7 @@
 				<h1 class="text-lg font-semibold tracking-wide text-[#e8e8e8]">
 					Solar / Battery Calculator
 				</h1>
-				<p class="mt-0.5 text-xs text-[#666] italic">
-					Created by Geet Gambhir and Alex Arovas
-				</p>
+				<p class="mt-0.5 text-xs text-[#666] italic">Created by Geet Gambhir and Alex Arovas</p>
 			</div>
 			<div class="flex items-center gap-3">
 				<div class="text-right leading-tight">
@@ -464,10 +462,7 @@
 							? 'border-[#f59e0b]/60'
 							: 'border-[#333]'}"
 					/>
-					{#if errors.startDate}<p
-							data-field-error
-							class="mt-0.5 text-xs text-red-400"
-						>
+					{#if errors.startDate}<p data-field-error class="mt-0.5 text-xs text-red-400">
 							{errors.startDate}
 						</p>{/if}
 				</div>
@@ -484,10 +479,7 @@
 							? 'border-[#f59e0b]/60'
 							: 'border-[#333]'}"
 					/>
-					{#if errors.endDate}<p
-							data-field-error
-							class="mt-0.5 text-xs text-red-400"
-						>
+					{#if errors.endDate}<p data-field-error class="mt-0.5 text-xs text-red-400">
 							{errors.endDate}
 						</p>{/if}
 				</div>
@@ -609,7 +601,8 @@
 							target="_blank"
 							rel="noopener noreferrer"
 							class="underline decoration-dotted underline-offset-2 hover:text-[#e8e8e8]"
-						>Insect Eavesdropper</a>
+							>Insect Eavesdropper</a
+						>
 						uses 4 W)
 					</span>
 				</label>
@@ -662,16 +655,17 @@
 				<p>
 					<strong class="text-[#e8e8e8]">Most users only need one group.</strong> A
 					{@render term('group', 'def-group')} is any cluster of devices sharing one
-					{@render term('battery bank', 'def-bank')}{#if mode === 'solar'}&nbsp;and <em>one set of solar
-							panels</em>{/if}. A battery bank can be a single battery or several batteries wired
-					together (the results below tell you how many batteries the bank needs to hold). The number
-					of <em>devices</em> in the group is how many devices that bank has to power.
+					{@render term('battery bank', 'def-bank')}{#if mode === 'solar'}&nbsp;and <em
+							>one set of solar panels</em
+						>{/if}. A battery bank can be a single battery or several batteries wired together (the
+					results below tell you how many batteries the bank needs to hold). The number of
+					<em>devices</em> in the group is how many devices that bank has to power.
 				</p>
 				<p>
-					Use <strong class="text-[#e8e8e8]">multiple groups</strong> to split your devices across
-					more than one independent battery bank. That can be because they're deployed at separate
-					sites (e.g.&nbsp;two field stations a kilometer apart), or simply because one bank can't
-					power them all. Each group is sized independently in the results below.
+					Use <strong class="text-[#e8e8e8]">multiple groups</strong> to split your devices across more
+					than one independent battery bank. That can be because they're deployed at separate sites (e.g.&nbsp;two
+					field stations a kilometer apart), or simply because one bank can't power them all. Each group
+					is sized independently in the results below.
 				</p>
 				<p class="text-[#777]">
 					Each device draws {devicePowerW}&nbsp;W continuously (<span class="font-mono"
@@ -1182,9 +1176,9 @@
 							Tilt angle
 						</p>
 						<p>
-							<span class="font-semibold text-[#aaa]">Tilt</span> is the angle between the panel face
-							and the flat ground. <span class="font-semibold text-[#aaa]">0°</span> means the panel
-							is lying flat, face pointed straight up at the sky.
+							<span class="font-semibold text-[#aaa]">Tilt</span> is the angle between the panel
+							face and the flat ground. <span class="font-semibold text-[#aaa]">0°</span> means the
+							panel is lying flat, face pointed straight up at the sky.
 							<span class="font-semibold text-[#aaa]">90°</span>
 							means the panel is standing on its edge, perpendicular to the ground (its face pointed sideways
 							at the horizon).
@@ -1319,18 +1313,18 @@
 						</div>
 						<p>
 							A reasonable year-round tilt is roughly <em>equal to your latitude</em> (e.g.&nbsp;~43°
-							at Madison, Wisconsin). It does not need to be exact (within ~10° of latitude only
-							costs a few percent of annual output) so being roughly right matters far more than
-							getting the exact degree.
+							at Madison, Wisconsin). It does not need to be exact (within ~10° of latitude only costs
+							a few percent of annual output) so being roughly right matters far more than getting the
+							exact degree.
 						</p>
 						<p class="mt-1">
-							If most of your energy demand falls in <em>winter</em> (when the sun is low in the sky),
-							add about 15° to your tilt to face it. If most of your demand falls in
+							If most of your energy demand falls in <em>winter</em> (when the sun is low in the
+							sky), add about 15° to your tilt to face it. If most of your demand falls in
 							<em>summer</em> (when the sun is high overhead), subtract about 15°. By
-							<em>winter&thinsp;/&thinsp;summer-heavy</em> we mean the season when you most need power, not
-							just when you're deployed. Near the spring and fall equinoxes the sun tracks close to
-							the celestial equator, so a tilt equal to your latitude is already near-optimal and no
-							seasonal adjustment is needed. A small tilt also helps panels self-clean in the rain.
+							<em>winter&thinsp;/&thinsp;summer-heavy</em> we mean the season when you most need power,
+							not just when you're deployed. Near the spring and fall equinoxes the sun tracks close to
+							the celestial equator, so a tilt equal to your latitude is already near-optimal and no seasonal
+							adjustment is needed. A small tilt also helps panels self-clean in the rain.
 						</p>
 					</div>
 					<div>
@@ -1338,15 +1332,16 @@
 							Avoid shading (this one really matters)
 						</p>
 						<p>
-							<span class="font-semibold text-[#aaa]">Keep the panel completely clear of
-								obstructions.</span>
+							<span class="font-semibold text-[#aaa]"
+								>Keep the panel completely clear of obstructions.</span
+							>
 							Even a tiny shadow, from a single leaf, a thin tree branch, a fence wire, an antenna, or
 							a nearby pole, can dramatically cut a panel's output, often by far more than the shaded
 							area would suggest. This is because the cells inside a panel are wired in series. Think
-							of it like cars on a single-lane road: every car behind a slow one is stuck moving at
-							the slow car's speed, no matter how fast they could otherwise go. In a panel, every
-							cell in the string is throttled to whatever the worst-lit cell can produce, so shading
-							just one cell can choke the entire panel.
+							of it like cars on a single-lane road: every car behind a slow one is stuck moving at the
+							slow car's speed, no matter how fast they could otherwise go. In a panel, every cell in
+							the string is throttled to whatever the worst-lit cell can produce, so shading just one
+							cell can choke the entire panel.
 						</p>
 						<p class="mt-1">
 							Trace the sun's path across the sky for every season you'll be deployed, not just at
@@ -1407,9 +1402,9 @@
 						<dd>
 							Energy used (or stored) over time. 1 Wh = running 1 W for 1 hour. Battery capacity is
 							measured in Wh. The "Battery capacity" input above is the capacity of one individual
-							battery; a {@render term('battery bank', 'def-bank')} of N such batteries holds N
-							times that capacity. A single 1000 Wh battery can power a 4 W device for about 250
-							hours (1000 ÷ 4) in ideal conditions.
+							battery; a {@render term('battery bank', 'def-bank')} of N such batteries holds N times
+							that capacity. A single 1000 Wh battery can power a 4 W device for about 250 hours (1000
+							÷ 4) in ideal conditions.
 						</dd>
 						<dd class="mt-1 font-mono text-xs text-[#666]">
 							Wh = W × hours · e.g. 4 W × 24 h = 96 Wh/day
@@ -1534,11 +1529,11 @@
 						<dd>
 							For each hour of the day, the worst observed irradiance across the historical record
 							is taken, and the last N days of the simulation use this worst-case profile. Placing
-							the bad stretch right at the <em>end</em> of the deployment is the worst-case timing:
-							if the same overcast stretch happened anywhere earlier in the experiment, the battery
-							would have had time to recharge afterward and would finish with equal or more energy
-							left. By assuming the bad weather comes last (when the battery has the least chance to
-							recover), we size the battery for the toughest possible scenario.
+							the bad stretch right at the <em>end</em> of the deployment is the worst-case timing: if
+							the same overcast stretch happened anywhere earlier in the experiment, the battery would
+							have had time to recharge afterward and would finish with equal or more energy left. By
+							assuming the bad weather comes last (when the battery has the least chance to recover),
+							we size the battery for the toughest possible scenario.
 						</dd>
 					</div>
 
