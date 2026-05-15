@@ -1041,15 +1041,28 @@
 			</section>
 		{/if}
 
-		<!-- ── 7. Methodology Accordion ───────────────────────────────────────── -->
-		<section class="border-t border-[#2a2a2a] pt-4">
-			<button
-				onclick={() => (methodologyOpen = !methodologyOpen)}
-				class="flex w-full items-center gap-2 text-left text-sm text-[#888] transition-colors hover:text-[#e8e8e8]"
-			>
-				<span class="font-mono text-xs">{methodologyOpen ? '▼' : '▶'}</span>
-				How is this calculated?
-			</button>
+		<!-- ── 7. Reference & background (methodology + positioning + definitions) ── -->
+		<section
+			class="space-y-4 rounded-sm border border-[#f59e0b]/25 bg-[#141414] p-5 shadow-[0_0_0_4px_rgba(245,158,11,0.03)]"
+		>
+			<div>
+				<h2 class="text-xs font-semibold tracking-widest text-[#f59e0b] uppercase">
+					Reference & background
+				</h2>
+				<p class="mt-1.5 text-xs leading-relaxed text-[#aaa]">
+					How this calculator works, field tips for deploying panels, and definitions of every
+					term used above. Click any section to expand it.
+				</p>
+			</div>
+
+			<div class="border-t border-[#2a2a2a] pt-4">
+				<button
+					onclick={() => (methodologyOpen = !methodologyOpen)}
+					class="flex w-full items-center gap-2 text-left text-sm font-medium text-[#aaa] transition-colors hover:text-[#e8e8e8]"
+				>
+					<span class="font-mono text-xs text-[#666]">{methodologyOpen ? '▼' : '▶'}</span>
+					How is this calculated?
+				</button>
 
 			{#if methodologyOpen}
 				<div class="mt-4 space-y-3 text-sm leading-relaxed text-[#888]">
@@ -1137,17 +1150,16 @@
 					</div>
 				</div>
 			{/if}
-		</section>
+			</div>
 
-		<!-- ── 8. Solar Panel Positioning Accordion ───────────────────────────── -->
-		<section class="border-t border-[#2a2a2a] pt-4">
-			<button
-				onclick={() => (positioningOpen = !positioningOpen)}
-				class="flex w-full items-center gap-2 text-left text-sm text-[#888] transition-colors hover:text-[#e8e8e8]"
-			>
-				<span class="font-mono text-xs">{positioningOpen ? '▼' : '▶'}</span>
-				Solar panel positioning tips
-			</button>
+			<div class="border-t border-[#2a2a2a] pt-4">
+				<button
+					onclick={() => (positioningOpen = !positioningOpen)}
+					class="flex w-full items-center gap-2 text-left text-sm font-medium text-[#aaa] transition-colors hover:text-[#e8e8e8]"
+				>
+					<span class="font-mono text-xs text-[#666]">{positioningOpen ? '▼' : '▶'}</span>
+					Solar panel positioning tips
+				</button>
 
 			{#if positioningOpen}
 				<div class="mt-4 space-y-3 text-sm leading-relaxed text-[#888]">
@@ -1371,17 +1383,16 @@
 					</div>
 				</div>
 			{/if}
-		</section>
+			</div>
 
-		<!-- ── 9. Definitions Accordion ───────────────────────────────────────── -->
-		<section class="border-t border-[#2a2a2a] pt-4">
-			<button
-				onclick={() => (definitionsOpen = !definitionsOpen)}
-				class="flex w-full items-center gap-2 text-left text-sm text-[#888] transition-colors hover:text-[#e8e8e8]"
-			>
-				<span class="font-mono text-xs">{definitionsOpen ? '▼' : '▶'}</span>
-				Definitions
-			</button>
+			<div class="border-t border-[#2a2a2a] pt-4">
+				<button
+					onclick={() => (definitionsOpen = !definitionsOpen)}
+					class="flex w-full items-center gap-2 text-left text-sm font-medium text-[#aaa] transition-colors hover:text-[#e8e8e8]"
+				>
+					<span class="font-mono text-xs text-[#666]">{definitionsOpen ? '▼' : '▶'}</span>
+					Definitions
+				</button>
 
 			{#if definitionsOpen}
 				<dl class="mt-4 space-y-3 text-sm leading-relaxed text-[#888]">
@@ -1551,6 +1562,7 @@
 					</div>
 				</dl>
 			{/if}
+			</div>
 		</section>
 	</div>
 </div>
