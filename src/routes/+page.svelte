@@ -1265,10 +1265,13 @@
 													<line x1="18.3" y1="16.3" x2="19.5" y2="17.5" />
 												</g>
 											</g>
-											<!-- Rays hitting the upper-left edge of the tilted panel -->
+											<!-- Three parallel rays perpendicular to the tilted panel face.
+											     Direction vector (14, 15) is at ~47° from horizontal, which is
+											     90° to the -43° panel surface. -->
 											<g stroke="#fbbf24" stroke-width="0.7" stroke-dasharray="2,2" opacity="0.6">
-												<line x1="18" y1="18" x2="26" y2="32" />
-												<line x1="25" y1="16" x2="34" y2="26" />
+												<line x1="21" y1="19" x2="35" y2="34" />
+												<line x1="27" y1="14" x2="41" y2="29" />
+												<line x1="15" y1="24" x2="29" y2="39" />
 											</g>
 											<!-- Angle arc -->
 											<path
