@@ -3,8 +3,14 @@
 		calculateBatteryOnly,
 		calculateWithSolar,
 		getSolarData,
+		SOLAR_EFFICIENCY,
+		CIRCUIT_EFFICIENCY,
 		type TotalOutput
 	} from '$lib/calculations';
+
+	// Expected losses, shown in the UI so users see where energy goes.
+	const solarLossPct = Math.round((1 - SOLAR_EFFICIENCY) * 100);
+	const circuitLossPct = Math.round((1 - CIRCUIT_EFFICIENCY) * 100);
 	import DeviceGroup from '$lib/components/DeviceGroup.svelte';
 	import ChargeGraph from '$lib/components/ChargeGraph.svelte';
 	import ResultsTable from '$lib/components/ResultsTable.svelte';
@@ -649,6 +655,16 @@
 					).toFixed(2)} W effective draw per device
 				</p>
 			</div>
+
+			<div class="rounded-sm border border-[#2a2a2a] bg-[#161616] px-3 py-2">
+				<p class="text-xs font-medium tracking-wide text-[#999]">Model assumptions (fixed)</p>
+				<p class="mt-0.5 text-xs text-[#888]">
+					{@render term('Solar', 'def-eff')} loss {solarLossPct}% (solar mode) &middot; {@render term(
+						'Circuit',
+						'def-circuit'
+					)} loss {circuitLossPct}% (both modes)
+				</p>
+			</div>
 		</section>
 
 		<!-- ── 2. Device Groups ───────────────────────────────────────────────── -->
@@ -1091,8 +1107,8 @@
 								Hourly {@render term('irradiance', 'def-irradiance')} (kWh/m²) is fetched from the {@render term(
 									'NASA POWER API',
 									'def-nasa'
-								)} using the ALLSKY_SFC_SW_DWN parameter, over the same seasonal date range for the years
-								2023–2025.
+								)} using the ALLSKY_SFC_SW_DWN parameter, over the same seasonal date range for the
+								three most recent complete years.
 							</p>
 						</div>
 						<div>
@@ -1114,7 +1130,7 @@
 								{@render term('irradiance', 'def-irradiance')} ×
 								{@render term('panel rating', 'def-panel')} ×
 								{@render term('number of panels', 'def-numpanels')} × 80% {@render term(
-									'system efficiency',
+									'solar efficiency',
 									'def-eff'
 								)}.
 							</p>
@@ -1133,7 +1149,8 @@
 								{@render term('safety margin', 'def-safety')} (default 30%) is applied to device {@render term(
 									'power draw',
 									'def-w'
-								)}.
+								)}, and a flat {@render term('circuit loss', 'def-circuit')} (10%) is applied to the
+								battery side so that usable battery energy is ~85% of nameplate.
 							</p>
 						</div>
 						<div>
@@ -1503,12 +1520,25 @@
 
 						<div id="def-eff" class="px-2 py-1">
 							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-								System efficiency (80%)
+								Solar efficiency (80%)
 							</dt>
 							<dd>
-								A flat de-rating applied to raw panel output to account for wiring losses, charge
-								controller / inverter inefficiency, soiling, and temperature effects. 80% is a
-								common rule-of-thumb for well-installed off-grid systems.
+								A flat de-rating applied to raw panel output to account for PV-side wiring losses,
+								charge controller / inverter inefficiency, soiling, and temperature effects. 80% is a
+								common rule-of-thumb for well-installed off-grid systems. Applies to solar generation
+								only.
+							</dd>
+						</div>
+
+						<div id="def-circuit" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Circuit loss (15%)
+							</dt>
+							<dd>
+								A flat de-rating on the battery side for wiring, conversion, battery internal
+								resistance, and self-discharge: usable battery energy is treated as ~85% of nameplate
+								capacity. Applies in both battery-only and battery + solar modes, and is included in
+								the energy figures above.
 							</dd>
 						</div>
 
@@ -1582,8 +1612,8 @@
 								A public NASA dataset providing hourly historical solar and meteorological data
 								anywhere on Earth. This calculator queries the
 								<span class="font-mono text-[#aaa]">ALLSKY_SFC_SW_DWN</span> parameter (all-sky surface
-								shortwave downward irradiance) for 2023–2025 in the same seasonal window as the user's
-								date range.
+								shortwave downward irradiance) for the three most recent complete years in the same
+								seasonal window as the user's date range.
 							</dd>
 						</div>
 					</dl>

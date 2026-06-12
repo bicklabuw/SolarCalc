@@ -29,7 +29,8 @@ self.onmessage = (e: MessageEvent) => {
 		solarWorst,
 		numPanels,
 		panelRatingW,
-		systemEfficiency,
+		solarEfficiency,
+		circuitEfficiency,
 		batteryCapacity,
 		batteriesWithoutSolar,
 		devicePowerW,
@@ -42,35 +43,37 @@ self.onmessage = (e: MessageEvent) => {
 		solarWorst: number[];
 		numPanels: number;
 		panelRatingW: number;
-		systemEfficiency: number;
+		solarEfficiency: number;
+		circuitEfficiency: number;
 		batteryCapacity: number;
 		batteriesWithoutSolar: number;
 		devicePowerW: number;
 		safetyMargin: number;
 	} = e.data;
 
-	const hourlyLoad = devices * devicePowerW * safetyMargin;
+	// Circuit/discharge loss: the battery must supply more than the raw device load.
+	const hourlyLoad = (devices * devicePowerW * safetyMargin) / circuitEfficiency;
 	const numAvgDays = numDays - numWorstDays;
 
 	// Precompute net load: positive = battery drains, negative = battery charges
-	// Solar output (Wh) = irradiance (kWh/m²) * panelRatingW * numPanels * systemEfficiency
+	// Solar output (Wh) = irradiance (kWh/m²) * panelRatingW * numPanels * solarEfficiency
 	const netLoad: number[] = [];
 	for (let d = 0; d < numAvgDays; d++) {
 		for (let h = 0; h < 24; h++) {
-			netLoad.push(hourlyLoad - (solarAvg[h] / 1000) * panelRatingW * numPanels * systemEfficiency);
+			netLoad.push(hourlyLoad - (solarAvg[h] / 1000) * panelRatingW * numPanels * solarEfficiency);
 		}
 	}
 	for (let d = 0; d < numWorstDays; d++) {
 		for (let h = 0; h < 24; h++) {
 			netLoad.push(
-				hourlyLoad - (solarWorst[h] / 1000) * panelRatingW * numPanels * systemEfficiency
+				hourlyLoad - (solarWorst[h] / 1000) * panelRatingW * numPanels * solarEfficiency
 			);
 		}
 	}
 
 	// Lower bound: minimum batteries assuming perfect storage (no ceiling losses)
 	const totalSolarWh =
-		solarAvg.reduce((s, v) => s + v, 0) * panelRatingW * numPanels * systemEfficiency * numDays;
+		solarAvg.reduce((s, v) => s + v, 0) * panelRatingW * numPanels * solarEfficiency * numDays;
 	const totalLoadWh = hourlyLoad * 24 * numDays;
 	const lowerBound = Math.max(1, Math.ceil((totalLoadWh - totalSolarWh) / batteryCapacity));
 

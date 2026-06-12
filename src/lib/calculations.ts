@@ -21,6 +21,12 @@ function getNumDays(start: string, end: string): number {
 	return Math.round((parse(end).getTime() - parse(start).getTime()) / 86400000) + 1;
 }
 
+// Circuit / discharge loss (wiring voltage drop, connectors, conversion, battery
+// internal resistance and self-discharge). Usable battery energy is treated as
+// ~85% of nameplate capacity. Applied to the load in both battery-only and solar
+// modes (so it shows up in the reported energy figures, not just the sizing).
+export const CIRCUIT_EFFICIENCY = 0.85;
+
 export function calculateBatteryOnly(
 	startDate: string,
 	endDate: string,
@@ -32,9 +38,14 @@ export function calculateBatteryOnly(
 	const lengthOfExperiment = getNumDays(startDate, endDate);
 	const powerPerDay = 24 * devicePowerW;
 	const groups: GroupOutput[] = devicesPerGroup.map((devices) => {
-		const dailyEnergyWh = devices * powerPerDay * safetyMargin;
+		// Circuit Efficiency is in dailyEnergy so it's accounted in all UI elements 
+		// (and doesn't change result). It's more intuitive to show the "losses" in the energy 
+		// numbers than in the battery count.
+		const dailyEnergyWh = devices * powerPerDay * safetyMargin / CIRCUIT_EFFICIENCY;
 		const totalEnergyWh = dailyEnergyWh * lengthOfExperiment;
-		const numBatteriesNeededNoSolar = Math.ceil(totalEnergyWh / batteryCapacity);
+		const numBatteriesNeededNoSolar = Math.ceil(
+			totalEnergyWh / batteryCapacity
+		);
 		return { devices, dailyEnergyWh, totalEnergyWh, numBatteriesNeededNoSolar };
 	});
 	return {
@@ -44,7 +55,9 @@ export function calculateBatteryOnly(
 	};
 }
 
-const SYSTEM_EFFICIENCY = 0.8;
+// Solar generation loss (PV-side wiring, MPPT / charge-controller, soiling,
+// temperature). Applied to solar output only.
+export const SOLAR_EFFICIENCY = 0.8;
 
 export async function calculateWithSolar(
 	startDate: string,
@@ -82,7 +95,8 @@ export async function calculateWithSolar(
 						solarWorst: worst,
 						numPanels: numPanelsPerGroup[i],
 						panelRatingW,
-						systemEfficiency: SYSTEM_EFFICIENCY,
+						solarEfficiency: SOLAR_EFFICIENCY,
+						circuitEfficiency: CIRCUIT_EFFICIENCY,
 						batteryCapacity,
 						batteriesWithoutSolar: group.numBatteriesNeededNoSolar,
 						devicePowerW,
@@ -119,7 +133,11 @@ export async function getAvgSunHours(
 	startDate: string,
 	endDate: string
 ): Promise<{ average: number[]; worst: number[] }> {
-	const YEARS = [2023, 2024, 2025] as const;
+	// Use the three most recent complete calendar years. The current year is
+	// excluded because it is incomplete (and NASA POWER data lag real time), so
+	// this window advances automatically as time passes.
+	const lastComplete = new Date().getFullYear() - 1;
+	const YEARS = [lastComplete - 2, lastComplete - 1, lastComplete];
 
 	const mmdd = (date: string) => date.replace(/-/g, '').slice(4);
 
