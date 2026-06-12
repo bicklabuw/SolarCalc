@@ -1,12 +1,10 @@
 <script lang="ts">
 	let {
 		groups,
-		title,
-		batteryCapacityWh
+		title
 	}: {
-		groups: { name: string; chargeHistory: number[]; numBatteries: number }[];
+		groups: { name: string; chargeHistory: number[]; capacityWh: number }[];
 		title: string;
-		batteryCapacityWh: number;
 	} = $props();
 
 	const PAD = { left: 70, right: 20, top: 16, bottom: 36 };
@@ -15,15 +13,12 @@
 	const chartW = W - PAD.left - PAD.right;
 	const chartH = H - PAD.top - PAD.bottom;
 
-	const LINE_COLORS = ['#6c7eb8', '#5fa87a', '#9b7fc0', '#b87a5f', '#5fb8b3'];
-	const ACCENT = '#f59e0b';
+	import { groupColor } from '$lib/colors';
 
 	// Maximum number of labeled day ticks on the x-axis. Adjust here to change density
 	const MAX_X_LABELS = 14;
 
-	const maxCapacity = $derived(
-		Math.max(...groups.map((g) => g.numBatteries * batteryCapacityWh), 1)
-	);
+	const maxCapacity = $derived(Math.max(...groups.map((g) => g.capacityWh), 1));
 	const numHours = $derived(groups[0]?.chargeHistory.length ?? 0);
 	const numDays = $derived(Math.ceil(numHours / 24));
 
@@ -40,29 +35,14 @@
 			groups
 				.map((g, i) => {
 					const name = g.name || `Group ${i + 1}`;
-					const cap = g.numBatteries * batteryCapacityWh;
+					const cap = g.capacityWh;
 					const minCharge = Math.min(...g.chargeHistory);
 					const minPct = cap > 0 ? ((minCharge / cap) * 100).toFixed(0) : '0';
-					return `${name}: ${g.numBatteries} battery(ies), minimum charge ${minCharge.toFixed(0)} Wh (${minPct}% of capacity)`;
+					return `${name}: ${cap.toFixed(0)} Wh battery, minimum charge ${minCharge.toFixed(0)} Wh (${minPct}% of capacity)`;
 				})
 				.join('. ') +
 			'.'
 	);
-
-	// worst group = lowest minimum charge relative to its own capacity
-	const worstIndex = $derived(() => {
-		let worst = Infinity;
-		let idx = 0;
-		groups.forEach((g, i) => {
-			const cap = g.numBatteries * batteryCapacityWh;
-			const minRelative = Math.min(...g.chargeHistory) / cap;
-			if (minRelative < worst) {
-				worst = minRelative;
-				idx = i;
-			}
-		});
-		return idx;
-	});
 
 	function toX(hour: number): number {
 		return PAD.left + (hour / Math.max(numHours - 1, 1)) * chartW;
@@ -173,24 +153,22 @@
 
 		<!-- Group lines -->
 		{#each groups as group, i (i)}
-			{@const isWorst = i === worstIndex()}
-			{@const color = isWorst ? ACCENT : LINE_COLORS[i % LINE_COLORS.length]}
+			{@const color = groupColor(i)}
 			<path
 				d={makePath(group.chargeHistory)}
 				fill="none"
 				stroke={color}
-				stroke-width={isWorst ? 2 : 1.5}
-				opacity={isWorst ? 1 : 0.7}
+				stroke-width="2"
+				opacity="0.9"
 			/>
 		{/each}
 
 		<!-- Legend -->
 		{#each groups as group, i (i)}
-			{@const isWorst = i === worstIndex()}
-			{@const color = isWorst ? ACCENT : LINE_COLORS[i % LINE_COLORS.length]}
+			{@const color = groupColor(i)}
 			{@const lx = PAD.left + i * 110}
 			{@const ly = H - 6}
-			<line x1={lx} y1={ly} x2={lx + 16} y2={ly} stroke={color} stroke-width={isWorst ? 2 : 1.5} />
+			<line x1={lx} y1={ly} x2={lx + 16} y2={ly} stroke={color} stroke-width="2" />
 			<text x={lx + 20} y={ly + 4} font-size="10" fill={color}>
 				{group.name || `Group ${i + 1}`}
 			</text>
