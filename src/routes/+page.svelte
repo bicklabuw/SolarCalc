@@ -45,6 +45,13 @@
 		return parseFloat(batteryCustom) || 0;
 	});
 
+	// When false (default) the calculator finds the minimum battery itself; when true
+	// the user supplies a specific battery to check (solar) or get recharges (battery).
+	let provideBattery = $state(false);
+	const userBatteryWh = $derived(() => (provideBattery ? effectiveBattery() : undefined));
+	// Snapshot of the supplied battery at calculate-time, for the "enough / short" readout.
+	let committedUserBattery = $state<number | undefined>(undefined);
+
 	let groups = $state<Group[]>([{ name: '', devices: 4, panels: 1 }]);
 
 	// ── Mode ──────────────────────────────────────────────────────────────────────
@@ -76,8 +83,6 @@
 	let long = $state('');
 	let numWorstDays = $state(3);
 	let committedWorstDays = $state(3);
-	// Snapshot of battery Wh at calculate-time; reassigned in calculate().
-	let committedBatteryCapacity = $state<number>(1000);
 	const PANEL_PRESETS = [40, 100, 160, 200, 220];
 	let panelPreset = $state(100);
 	let panelCustom = $state('');
@@ -262,7 +267,8 @@
 			errs.endDate = 'End date must be after start date.';
 		}
 
-		if (effectiveBattery() <= 0) errs.battery = 'Battery capacity must be greater than 0.';
+		if (provideBattery && effectiveBattery() <= 0)
+			errs.battery = 'Battery capacity must be greater than 0.';
 
 		if (groups.length === 0) {
 			errs.groups = 'Add at least one group.';
@@ -313,13 +319,14 @@
 		const devicesPerGroup = groups.map((g) => g.devices);
 
 		if (mode === 'battery') {
+			committedUserBattery = userBatteryWh();
 			batteryResult = calculateBatteryOnly(
 				start,
 				end,
 				devicesPerGroup,
-				effectiveBattery(),
 				devicePowerW,
-				1 + safetyMarginPct / 100
+				1 + safetyMarginPct / 100,
+				userBatteryWh()
 			);
 			status = 'done';
 			return;
@@ -339,43 +346,43 @@
 			status = 'running';
 			statusMsg = 'Running simulation…';
 			committedWorstDays = numWorstDays;
-			committedBatteryCapacity = effectiveBattery();
+			committedUserBattery = userBatteryWh();
 			const margin = 1 + safetyMarginPct / 100;
 			[solarResultN, solarResultAll] = await Promise.all([
 				calculateWithSolar(
 					start,
 					end,
 					devicesPerGroup,
-					effectiveBattery(),
 					solarData,
 					numWorstDays,
 					effectivePanel,
 					panels,
 					devicePowerW,
-					margin
+					margin,
+					'nworst'
 				),
 				calculateWithSolar(
 					start,
 					end,
 					devicesPerGroup,
-					effectiveBattery(),
 					solarData,
 					days,
 					effectivePanel,
 					panels,
 					devicePowerW,
-					margin
+					margin,
+					'allworst'
 				)
 			]);
 
-			// Keep battery-only for "reduction vs battery-only" comparison
+			// Battery-only baseline (also gives the no-recharge capacity per group)
 			batteryResult = calculateBatteryOnly(
 				start,
 				end,
 				devicesPerGroup,
-				effectiveBattery(),
 				devicePowerW,
-				margin
+				margin,
+				userBatteryWh()
 			);
 
 			status = 'done';
@@ -390,6 +397,7 @@
 
 	let methodologyOpen = $state(false);
 	let positioningOpen = $state(false);
+	let wiringOpen = $state(false);
 	let definitionsOpen = $state(false);
 
 	function jumpTo(id: string) {
@@ -499,104 +507,131 @@
 
 			<div>
 				<p class="text-xs text-[#e8e8e8]">
-					Battery capacity ({@render term('Wh', 'def-wh')})
+					Battery ({@render term('Wh', 'def-wh')}) <span class="text-[#888]">(optional)</span>
 				</p>
 				<div class="mt-1 flex flex-wrap gap-1.5">
-					{#each BATTERY_PRESETS as preset (preset)}
-						<button
-							onclick={() => {
-								batteryPreset = preset;
-								useCustomBattery = false;
-							}}
-							class="rounded-sm border px-3 py-1 text-sm transition-colors {!useCustomBattery &&
-							batteryPreset === preset
-								? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
-								: 'border-[#333] text-[#aaa] hover:border-[#555]'}"
-						>
-							{preset}
-						</button>
-					{/each}
 					<button
-						onclick={() => (useCustomBattery = true)}
-						class="rounded-sm border px-3 py-1 text-sm transition-colors {useCustomBattery
+						onclick={() => (provideBattery = false)}
+						class="rounded-sm border px-3 py-1 text-sm transition-colors {!provideBattery
 							? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
 							: 'border-[#333] text-[#aaa] hover:border-[#555]'}"
 					>
-						Custom (Wh or Ah × V)
+						Calculate the minimum for me
+					</button>
+					<button
+						onclick={() => (provideBattery = true)}
+						class="rounded-sm border px-3 py-1 text-sm transition-colors {provideBattery
+							? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
+							: 'border-[#333] text-[#aaa] hover:border-[#555]'}"
+					>
+						I have a battery
 					</button>
 				</div>
-				{#if !useCustomBattery}
+				{#if !provideBattery}
 					<p class="mt-1 text-xs text-[#888]">
-						Click <span class="text-[#aaa]">Custom</span> to enter Wh directly, or compute it from {@render term(
-							'Ah',
-							'def-ah'
-						)} × {@render term('V', 'def-v')}.
+						The calculator will report the smallest battery that works. Choose
+						<span class="text-[#aaa]">I have a battery</span> to check a specific one (and, in battery-only
+						mode, see how many recharges it needs).
 					</p>
 				{/if}
-				{#if useCustomBattery}
-					<div class="mt-2 space-y-2 rounded-sm border border-[#2a2a2a] bg-[#141414] p-3">
-						<div class="flex gap-1.5">
+				{#if provideBattery}
+					<div class="mt-2 flex flex-wrap gap-1.5">
+						{#each BATTERY_PRESETS as preset (preset)}
 							<button
-								onclick={() => (customBatteryMode = 'wh')}
-								class="rounded-sm border px-2.5 py-0.5 text-xs transition-colors {customBatteryMode ===
-								'wh'
+								onclick={() => {
+									batteryPreset = preset;
+									useCustomBattery = false;
+								}}
+								class="rounded-sm border px-3 py-1 text-sm transition-colors {!useCustomBattery &&
+								batteryPreset === preset
 									? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
-									: 'border-[#333] text-[#888] hover:border-[#555]'}"
+									: 'border-[#333] text-[#aaa] hover:border-[#555]'}"
 							>
-								Enter Wh
+								{preset}
 							</button>
-							<button
-								onclick={() => (customBatteryMode = 'ahv')}
-								class="rounded-sm border px-2.5 py-0.5 text-xs transition-colors {customBatteryMode ===
-								'ahv'
-									? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
-									: 'border-[#333] text-[#888] hover:border-[#555]'}"
-							>
-								Compute from Ah × V
-							</button>
-						</div>
-
-						{#if customBatteryMode === 'wh'}
-							<input
-								type="number"
-								bind:value={batteryCustom}
-								placeholder="Enter Wh"
-								min="1"
-								class="w-40 rounded-sm border border-[#333] bg-[#1a1a1a] px-3 py-1.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
-							/>
-						{:else}
-							<div class="flex flex-wrap items-center gap-2">
-								<label class="flex items-center gap-1.5 text-xs text-[#888]">
-									<span>Ah</span>
-									<input
-										type="number"
-										bind:value={batteryAh}
-										placeholder="Enter Ah"
-										min="0"
-										step="any"
-										class="w-28 rounded-sm border border-[#333] bg-[#1a1a1a] px-2 py-1 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
-									/>
-								</label>
-								<span class="text-[#666]">×</span>
-								<label class="flex items-center gap-1.5 text-xs text-[#888]">
-									<span>V</span>
-									<input
-										type="number"
-										bind:value={batteryV}
-										placeholder="Enter V"
-										min="0"
-										step="any"
-										class="w-28 rounded-sm border border-[#333] bg-[#1a1a1a] px-2 py-1 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
-									/>
-								</label>
-								<span class="text-[#666]">=</span>
-								<span class="font-mono text-sm text-[#f59e0b]">
-									{customWhFromAhV().toFixed(1)} Wh
-								</span>
-							</div>
-							<p class="text-xs text-[#666]">Example: 100 Ah × 12 V = 1200 Wh</p>
-						{/if}
+						{/each}
+						<button
+							onclick={() => (useCustomBattery = true)}
+							class="rounded-sm border px-3 py-1 text-sm transition-colors {useCustomBattery
+								? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
+								: 'border-[#333] text-[#aaa] hover:border-[#555]'}"
+						>
+							Custom (Wh or Ah × V)
+						</button>
 					</div>
+					{#if !useCustomBattery}
+						<p class="mt-1 text-xs text-[#888]">
+							Click <span class="text-[#aaa]">Custom</span> to enter Wh directly, or compute it from {@render term(
+								'Ah',
+								'def-ah'
+							)} × {@render term('V', 'def-v')}.
+						</p>
+					{/if}
+					{#if useCustomBattery}
+						<div class="mt-2 space-y-2 rounded-sm border border-[#2a2a2a] bg-[#141414] p-3">
+							<div class="flex gap-1.5">
+								<button
+									onclick={() => (customBatteryMode = 'wh')}
+									class="rounded-sm border px-2.5 py-0.5 text-xs transition-colors {customBatteryMode ===
+									'wh'
+										? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
+										: 'border-[#333] text-[#888] hover:border-[#555]'}"
+								>
+									Enter Wh
+								</button>
+								<button
+									onclick={() => (customBatteryMode = 'ahv')}
+									class="rounded-sm border px-2.5 py-0.5 text-xs transition-colors {customBatteryMode ===
+									'ahv'
+										? 'border-[#f59e0b] bg-[#f59e0b]/10 text-[#f59e0b]'
+										: 'border-[#333] text-[#888] hover:border-[#555]'}"
+								>
+									Compute from Ah × V
+								</button>
+							</div>
+
+							{#if customBatteryMode === 'wh'}
+								<input
+									type="number"
+									bind:value={batteryCustom}
+									placeholder="Enter Wh"
+									min="1"
+									class="w-40 rounded-sm border border-[#333] bg-[#1a1a1a] px-3 py-1.5 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
+								/>
+							{:else}
+								<div class="flex flex-wrap items-center gap-2">
+									<label class="flex items-center gap-1.5 text-xs text-[#888]">
+										<span>Ah</span>
+										<input
+											type="number"
+											bind:value={batteryAh}
+											placeholder="Enter Ah"
+											min="0"
+											step="any"
+											class="w-28 rounded-sm border border-[#333] bg-[#1a1a1a] px-2 py-1 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
+										/>
+									</label>
+									<span class="text-[#666]">×</span>
+									<label class="flex items-center gap-1.5 text-xs text-[#888]">
+										<span>V</span>
+										<input
+											type="number"
+											bind:value={batteryV}
+											placeholder="Enter V"
+											min="0"
+											step="any"
+											class="w-28 rounded-sm border border-[#333] bg-[#1a1a1a] px-2 py-1 font-mono text-sm text-[#e8e8e8] focus:border-[#f59e0b] focus:outline-none"
+										/>
+									</label>
+									<span class="text-[#666]">=</span>
+									<span class="font-mono text-sm text-[#f59e0b]">
+										{customWhFromAhV().toFixed(1)} Wh
+									</span>
+								</div>
+								<p class="text-xs text-[#666]">Example: 100 Ah × 12 V = 1200 Wh</p>
+							{/if}
+						</div>
+					{/if}
 				{/if}
 				{#if errors.battery}<p data-field-error class="mt-0.5 text-xs text-red-400">
 						{errors.battery}
@@ -652,17 +687,17 @@
 					{devicePowerW} W × {(1 + safetyMarginPct / 100).toFixed(2)} = {(
 						devicePowerW *
 						(1 + safetyMarginPct / 100)
-					).toFixed(2)} W effective draw per device
+					).toFixed(2)}
+					{@render term('W', 'def-w')} effective draw per device
 				</p>
 			</div>
 
 			<div class="rounded-sm border border-[#2a2a2a] bg-[#161616] px-3 py-2">
 				<p class="text-xs font-medium tracking-wide text-[#999]">Model assumptions (fixed)</p>
 				<p class="mt-0.5 text-xs text-[#888]">
-					{@render term('Solar', 'def-eff')} loss {solarLossPct}% (solar mode) &middot; {@render term(
-						'Circuit',
-						'def-circuit'
-					)} loss {circuitLossPct}% (both modes)
+					{@render term('Solar loss', 'def-eff')}
+					{solarLossPct}% (solar mode) &middot; {@render term('Circuit loss', 'def-circuit')}
+					{circuitLossPct}% (both modes)
 				</p>
 			</div>
 		</section>
@@ -675,19 +710,20 @@
 				class="space-y-2 rounded-sm border border-[#2a2a2a] bg-[#141414] px-3 py-2.5 text-xs leading-relaxed text-[#aaa]"
 			>
 				<p>
-					<strong class="text-[#e8e8e8]">Most users only need one group.</strong> A
-					{@render term('group', 'def-group')} is any cluster of devices sharing one
-					{@render term('battery bank', 'def-bank')}{#if mode === 'solar'}&nbsp;and <em
-							>one set of solar panels</em
-						>{/if}. A battery bank can be a single battery or several batteries wired together (the
-					results below tell you how many batteries the bank needs to hold). The number of
-					<em>devices</em> in the group is how many devices that bank has to power.
+					<strong class="text-[#e8e8e8]">Most users only need one group.</strong> A {@render term(
+						'group',
+						'def-group'
+					)} is a cluster of devices powered by one {@render term(
+						'battery',
+						'def-bank'
+					)}{#if mode === 'solar'}&nbsp;and one set of solar panels{/if}. The <em>devices</em> count is
+					how many that battery powers; the results below give the battery for each group.
 				</p>
 				<p>
 					Use <strong class="text-[#e8e8e8]">multiple groups</strong> to split your devices across more
-					than one independent battery bank. That can be because they're deployed at separate sites (e.g.&nbsp;two
-					field stations a kilometer apart), or simply because one bank can't power them all. Each group
-					is sized independently in the results below.
+					than one independent battery. That can be because they're deployed at separate sites (e.g.&nbsp;two
+					field stations a kilometer apart), or simply because one battery can't power them all. Each
+					group is sized independently in the results below.
 				</p>
 				<p class="text-[#777]">
 					Each device draws {devicePowerW}&nbsp;W continuously (<span class="font-mono"
@@ -995,30 +1031,27 @@
 				</div>
 
 				<div>
-					<h3 class="mb-2 text-sm font-medium text-[#e8e8e8]">
-						Batteries per group
-						<span class="ml-1 text-xs font-normal text-[#888]"
-							>(how many batteries each group's bank must contain)</span
-						>
-					</h3>
+					<h3 class="text-sm font-medium text-[#e8e8e8]">Battery per group</h3>
+					<p class="mb-2 text-xs text-[#888]">
+						{provideBattery
+							? 'Recharges with your battery, plus the no-recharge minimum. Use one per group.'
+							: 'Smallest single battery that lasts the whole experiment. Use one per group.'}
+					</p>
 					<ResultsTable
 						mode="battery"
+						experimentDays={totalDays()}
+						{term}
 						groups={batteryResult.groups.map((g, i) => ({
 							name: groupName(i),
-							batteriesNoSolar: g.numBatteriesNeededNoSolar
+							dailyUseWh: g.dailyEnergyWh,
+							minCapacityWh: g.minCapacityWh,
+							rechargesNeeded: g.rechargesNeeded,
+							runtimePerChargeDays:
+								committedUserBattery && committedUserBattery > 0 && g.dailyEnergyWh > 0
+									? committedUserBattery / g.dailyEnergyWh
+									: undefined
 						}))}
 					/>
-				</div>
-
-				<div class="border-t border-[#2a2a2a] pt-3 text-sm text-[#999]">
-					<div class="flex justify-between">
-						<span>Daily energy use</span>
-						<span class="font-mono text-[#e8e8e8]">{batteryResult.powerPerDay.toFixed(0)} Wh</span>
-					</div>
-					<div class="mt-1 flex justify-between">
-						<span>Total energy</span>
-						<span class="font-mono text-[#e8e8e8]">{batteryResult.totalPower.toFixed(0)} Wh</span>
-					</div>
 				</div>
 			</section>
 		{/if}
@@ -1033,42 +1066,77 @@
 				</div>
 
 				<div>
-					<h3 class="mb-2 text-sm font-medium text-[#e8e8e8]">
-						Batteries per group
-						<span class="ml-1 text-xs font-normal text-[#888]"
-							>(how many batteries each group's bank must contain)</span
-						>
-					</h3>
+					<h3 class="text-sm font-medium text-[#e8e8e8]">Recommended battery per group</h3>
+					<p class="mb-2 text-xs text-[#888]">
+						Smallest single battery that survives. Use one per group.
+					</p>
 					<ResultsTable
 						mode="solar"
 						{committedWorstDays}
 						groups={batteryResult.groups.map((g, i) => ({
 							name: groupName(i),
-							batteriesNoSolar: g.numBatteriesNeededNoSolar,
-							batteriesN: solarResultN!.groups[i].numBatteriesNeededWithSolar,
-							batteriesAll: solarResultAll!.groups[i].numBatteriesNeededWithSolar
+							dailyUseWh: g.dailyEnergyWh,
+							minCapacityBatteryOnly: g.minCapacityWh,
+							minCapacityN: solarResultN!.groups[i].minCapacityWh,
+							minCapacityAll: solarResultAll!.groups[i].minCapacityWh
 						}))}
 					/>
+					{#if committedUserBattery && committedUserBattery > 0}
+						<div class="mt-2 rounded-sm border border-[#2a2a2a] bg-[#141414] px-3 py-2 text-xs">
+							<p class="mb-1 text-[#aaa]">
+								Your battery ({committedUserBattery.toLocaleString()} Wh) vs the worst-stretch need:
+							</p>
+							{#each solarResultN.groups as g, i (i)}
+								{@const need = g.minCapacityWh ?? 0}
+								{@const ok = committedUserBattery >= need}
+								<div class="flex justify-between py-0.5">
+									<span class="text-[#bbb]">{groupName(i)}</span>
+									<span class="font-mono {ok ? 'text-[#5fa87a]' : 'text-[#d08770]'}">
+										{ok
+											? `enough (+${Math.round(committedUserBattery - need).toLocaleString()} Wh)`
+											: `short by ${Math.ceil(need - committedUserBattery).toLocaleString()} Wh`}
+									</span>
+								</div>
+							{/each}
+						</div>
+					{/if}
+					<div class="mt-3 space-y-1 text-xs text-[#888]">
+						<p>
+							Solar data comes from NASA's {@render term('POWER API', 'def-nasa')}, using the three
+							previous years over your date range. For ranges shorter than a month, the worst days
+							are drawn from a one-month window centered on your dates.
+						</p>
+						<p>
+							{@render term('Worst stretch', 'def-worststretch')} takes the {committedWorstDays} lowest-sunlight
+							day{committedWorstDays === 1 ? '' : 's'} in that data, each a different day, and places
+							{committedWorstDays === 1 ? 'it' : 'them'} back-to-back at the end of your experiment (the
+							realistic plan).
+						</p>
+						<p>
+							{@render term('Worst case', 'def-worstcase')} assumes every day is as low as the single
+							lowest-sunlight day in that data (a deliberately extreme test).
+						</p>
+					</div>
 				</div>
 
 				<div class="space-y-6 border-t border-[#2a2a2a] pt-4">
 					<ChargeGraph
-						title="Simulation: {committedWorstDays} worst day{committedWorstDays === 1 ? '' : 's'}"
+						title="Worst stretch: {committedWorstDays} lowest-sunlight day{committedWorstDays === 1
+							? ''
+							: 's'} placed at the end"
 						groups={solarResultN.groups.map((g, i) => ({
 							name: groupName(i),
 							chargeHistory: g.chargeHistory!,
-							numBatteries: g.numBatteriesNeededWithSolar!
+							capacityWh: g.minCapacityWh!
 						}))}
-						batteryCapacityWh={committedBatteryCapacity}
 					/>
 					<ChargeGraph
-						title="Simulation: all worst days"
+						title="Worst case: every day at the single lowest-sunlight day"
 						groups={solarResultAll.groups.map((g, i) => ({
 							name: groupName(i),
 							chargeHistory: g.chargeHistory!,
-							numBatteries: g.numBatteriesNeededWithSolar!
+							capacityWh: g.minCapacityWh!
 						}))}
-						batteryCapacityWh={committedBatteryCapacity}
 					/>
 				</div>
 			</section>
@@ -1107,8 +1175,8 @@
 								Hourly {@render term('irradiance', 'def-irradiance')} (kWh/m²) is fetched from the {@render term(
 									'NASA POWER API',
 									'def-nasa'
-								)} using the ALLSKY_SFC_SW_DWN parameter, over the same seasonal date range for the
-								three most recent complete years.
+								)} using the ALLSKY_SFC_SW_DWN parameter, over the same seasonal date range for the three
+								most recent complete years.
 							</p>
 						</div>
 						<div>
@@ -1116,9 +1184,12 @@
 								Average vs worst case
 							</p>
 							<p>
-								For each hour of the day, the average profile takes the mean
-								{@render term('irradiance', 'def-irradiance')} across all matching days and years. The
-								worst-case profile takes the single lowest observed value for that hour.
+								For each hour of the day, the average profile takes the mean {@render term(
+									'irradiance',
+									'def-irradiance'
+								)} across all matching days and years. The worst days are the actual lowest-sunlight days
+								from the pulled data (the three previous years near your dates), each keeping its real
+								hourly shape, so they are realistic days rather than a synthetic worst hour.
 							</p>
 						</div>
 						<div>
@@ -1143,14 +1214,14 @@
 								Hour-by-hour simulation
 							</p>
 							<p>
-								The {@render term('battery bank', 'def-bank')} charges when solar output exceeds device
-								load and discharges otherwise. Energy beyond the bank's total
+								The {@render term('battery', 'def-bank')} charges when solar output exceeds device load
+								and discharges otherwise. Energy beyond the battery's total
 								{@render term('capacity', 'def-wh')} is lost. A configurable
 								{@render term('safety margin', 'def-safety')} (default 30%) is applied to device {@render term(
 									'power draw',
 									'def-w'
-								)}, and a flat {@render term('circuit loss', 'def-circuit')} (10%) is applied to the
-								battery side so that usable battery energy is ~85% of nameplate.
+								)}, and a flat {@render term('circuit loss', 'def-circuit')} (15%) is applied to the battery
+								side so that usable battery energy is ~85% of nameplate.
 							</p>
 						</div>
 						<div>
@@ -1159,7 +1230,8 @@
 							</p>
 							<p>
 								The first (total days − N) days use the average hourly profile. The final N days use
-								the worst-case profile. The bank's charge state carries over naturally between days.
+								the N distinct worst days (the N lowest-sunlight days from the pulled data, worst to
+								least), one after another. The charge state carries over naturally between days.
 							</p>
 						</div>
 						<div>
@@ -1167,19 +1239,19 @@
 								All worst days scenario
 							</p>
 							<p>
-								Every day uses the worst-case hourly profile. This is the maximum stress test for
-								the system.
+								Every day uses the single lowest-sunlight day from the pulled data. This is the
+								deliberately extreme stress test for the system.
 							</p>
 						</div>
 						<div>
 							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-								Finding the minimum batteries
+								Finding the recommended battery
 							</p>
 							<p>
-								A binary search is run over candidate battery counts. Each candidate is interpreted
-								as a battery bank made of that many batteries wired together. For each candidate,
-								the full simulation is executed. The smallest count that keeps the bank from running
-								out of charge is used.
+								A binary search finds the smallest battery capacity (in Wh) that keeps the charge
+								above zero across the whole simulation. The result is the recommended size for a
+								single battery per group; in battery-only mode the calculator instead reports how
+								many times your battery must be recharged.
 							</p>
 						</div>
 					</div>
@@ -1426,6 +1498,75 @@
 
 			<div class="border-t border-[#2a2a2a] pt-4">
 				<button
+					onclick={() => (wiringOpen = !wiringOpen)}
+					class="flex w-full items-center gap-2 text-left text-sm font-medium text-[#aaa] transition-colors hover:text-[#e8e8e8]"
+				>
+					<span class="font-mono text-xs text-[#666]">{wiringOpen ? '▼' : '▶'}</span>
+					Wiring &amp; battery tips
+				</button>
+				{#if wiringOpen}
+					<div class="mt-4 space-y-3 text-sm leading-relaxed text-[#888]">
+						<p class="text-[#aaa]">
+							One battery per group is the safe default. A few field rules keep losses and hazards
+							down.
+						</p>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Prefer one battery
+							</p>
+							<p>
+								Use a single battery of the recommended capacity for each group. If you need more
+								capacity, reach for one larger battery rather than wiring several together.
+								Connecting batteries in parallel is genuinely hazardous for the unpracticed: any
+								difference in charge, age, or internal resistance between them drives a large
+								current from one battery into another, which can overheat cells, melt connectors,
+								vent or rupture a battery, and in the worst case start a fire. (Series wiring is
+								safer but raises the voltage and brings its own pitfalls.) A single larger battery
+								sidesteps all of this. When in doubt, size up one battery rather than combining
+								several.
+							</p>
+						</div>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Keep wire runs short and thick
+							</p>
+							<p>
+								The calculator assumes a fixed ~15% circuit loss, which suits a well-wired setup.
+								Long or thin wires add voltage drop on top of that: keep the battery close to the
+								devices, use an adequate wire gauge, and minimize the run length. Doubling a run
+								roughly doubles its wiring loss. As a rough guide on a 12 V system, runs under ~25
+								ft on adequate wire usually stay within the assumed loss; by ~50 ft on thin wire the
+								extra drop can reach several percent, and past ~100 ft it can rival the 15% circuit
+								loss itself, so shorten the run, step up the wire gauge, or use a higher battery
+								voltage.
+							</p>
+						</div>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								One battery, one cluster
+							</p>
+							<p>
+								Don't power devices that sit far apart from a single battery. Give each cluster its
+								own group and its own battery, so no long cable has to carry current across the
+								field.
+							</p>
+						</div>
+						<div>
+							<p class="mb-0.5 text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Connections and protection
+							</p>
+							<p>
+								Use secure, weatherproof connectors, strain-relieve cables, and add an appropriately
+								rated fuse close to the battery terminal. Good connections matter as much as the
+								right capacity.
+							</p>
+						</div>
+					</div>
+				{/if}
+			</div>
+
+			<div class="border-t border-[#2a2a2a] pt-4">
+				<button
 					onclick={() => (definitionsOpen = !definitionsOpen)}
 					class="flex w-full items-center gap-2 text-left text-sm font-medium text-[#aaa] transition-colors hover:text-[#e8e8e8]"
 				>
@@ -1451,10 +1592,10 @@
 							</dt>
 							<dd>
 								Energy used (or stored) over time. 1 Wh = running 1 W for 1 hour. Battery capacity
-								is measured in Wh. The "Battery capacity" input above is the capacity of one
-								individual battery; a {@render term('battery bank', 'def-bank')} of N such batteries holds
-								N times that capacity. A single 1000 Wh battery can power a 4 W device for about 250 hours
-								(1000 ÷ 4) in ideal conditions.
+								is measured in Wh. The optional battery input above is the capacity of one battery.
+								The calculator recommends a single battery per group; the default Calculate the
+								minimum for me reports the smallest battery that works. A single 1000 Wh battery can
+								power a 4 W device for about 250 hours (1000 ÷ 4) in ideal conditions.
 							</dd>
 							<dd class="mt-1 font-mono text-xs text-[#666]">
 								Wh = W × hours · e.g. 4 W × 24 h = 96 Wh/day
@@ -1524,9 +1665,9 @@
 							</dt>
 							<dd>
 								A flat de-rating applied to raw panel output to account for PV-side wiring losses,
-								charge controller / inverter inefficiency, soiling, and temperature effects. 80% is a
-								common rule-of-thumb for well-installed off-grid systems. Applies to solar generation
-								only.
+								charge controller / inverter inefficiency, soiling, and temperature effects. 80% is
+								a common rule-of-thumb for well-installed off-grid systems. Applies to solar
+								generation only.
 							</dd>
 						</div>
 
@@ -1536,9 +1677,9 @@
 							</dt>
 							<dd>
 								A flat de-rating on the battery side for wiring, conversion, battery internal
-								resistance, and self-discharge: usable battery energy is treated as ~85% of nameplate
-								capacity. Applies in both battery-only and battery + solar modes, and is included in
-								the energy figures above.
+								resistance, and self-discharge: usable battery energy is treated as ~85% of
+								nameplate capacity. Applies in both battery-only and battery + solar modes, and is
+								included in the energy figures above.
 							</dd>
 						</div>
 
@@ -1553,29 +1694,58 @@
 							</dd>
 						</div>
 
+						<div id="def-sizeband" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Battery size (lasts per charge)
+							</dt>
+							<dd>
+								In battery-only mode with your own battery, the <em>lasts per charge</em> value is
+								colored to show how well that size suits fieldwork, based on how long the battery
+								runs before a recharge or swap (R) versus your experiment length (E).
+								<span class="mt-1 block"
+									><span style="color:#f87171">Too small</span>: R is under min(3 days, a third of
+									the run); you would swap every couple of days or less, usually impractical.</span
+								>
+								<span class="block"
+									><span style="color:#fb923c">Frequent swaps</span>: under min(7 days, half the
+									run); workable, but you will recharge often.</span
+								>
+								<span class="block"
+									><span style="color:#facc15">Periodic swaps</span>: lasts longer than that but not
+									the whole run; at least one recharge before the end.</span
+								>
+								<span class="block"
+									><span style="color:#4ade80">Lasts the run</span>: one charge covers the entire
+									experiment, so no recharges. The sweet spot.</span
+								>
+								<span class="block"
+									><span style="color:#c084fc">Oversized</span>: more than twice the run; it works,
+									but the battery is heavier and pricier than a single deployment needs.</span
+								>
+							</dd>
+						</div>
+
 						<div id="def-group" class="px-2 py-1">
 							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">Group</dt>
 							<dd>
-								A set of devices powered by a single, shared power system (one
-								{@render term('battery bank', 'def-bank')}, plus one set of solar panels in solar
-								mode). A group does not have to map to a single physical site. Use multiple groups
-								whenever your devices need to be split across more than one independent power
-								system, whether because they're at different locations or because one bank can't
-								handle them all.
+								A cluster of devices powered by one {@render term('battery', 'def-bank')} (and one set
+								of solar panels in solar mode). A group need not be a single site: use separate groups
+								whenever devices must run on separate batteries, whether they are far apart or one battery
+								cannot power them all.
 							</dd>
 						</div>
 
 						<div id="def-bank" class="px-2 py-1">
 							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-								Battery bank
+								Battery (per group)
 							</dt>
 							<dd>
-								The full energy store for one group: one or more individual
-								{@render term('Wh', 'def-wh')}-rated batteries wired together so they share the load
-								and behave like a single, larger battery. When this calculator says "the bank" or
-								"battery bank" it means this whole collection; when it says "batteries" (plural) or
-								gives a count, it means the number of individual units that make up the bank. All
-								batteries in a bank are assumed to be the same model with the same capacity.
+								The battery for one group. This calculator recommends a single
+								{@render term('Wh', 'def-wh')}-rated battery per group, sized in Wh. If you ever
+								need more capacity, use one larger battery where possible; wiring several batteries
+								together (especially in parallel) is error-prone and best avoided by
+								non-specialists. The tool therefore reports a recommended capacity (in Wh) for one
+								battery rather than a count of several batteries to wire together.
 							</dd>
 						</div>
 
@@ -1591,16 +1761,35 @@
 
 						<div id="def-worst" class="px-2 py-1">
 							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
-								N WORST DAYS
+								Number of worst days (N)
 							</dt>
 							<dd>
-								For each hour of the day, the worst observed irradiance across the historical record
-								is taken, and the last N days of the simulation use this worst-case profile. Placing
-								the bad stretch right at the <em>end</em> of the deployment is the worst-case timing:
-								if the same overcast stretch happened anywhere earlier in the experiment, the battery
-								would have had time to recharge afterward and would finish with equal or more energy left.
-								By assuming the bad weather comes last (when the battery has the least chance to recover),
-								we size the battery for the toughest possible scenario.
+								How many low-sunlight days to string together at the end of the simulation. The
+								calculator picks the N lowest-sunlight days from the data it pulled, the three
+								previous years over your dates, widened to a one-month window for short experiments,
+								each a different real day, worst first. Putting them at the <em>end</em> is the toughest
+								timing, because the battery has the least chance to recharge afterward.
+							</dd>
+						</div>
+
+						<div id="def-worststretch" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">
+								Worst stretch
+							</dt>
+							<dd>
+								The realistic bad-weather plan. The calculator takes the N lowest-sunlight days from
+								the data it pulled (the three previous years near your dates, widened to a one-month
+								window for short experiments), each a different real day, and runs them back-to-back
+								at the end of the experiment, when the battery has had the least chance to recharge.
+							</dd>
+						</div>
+
+						<div id="def-worstcase" class="px-2 py-1">
+							<dt class="text-xs font-medium tracking-wide text-[#e8e8e8] uppercase">Worst case</dt>
+							<dd>
+								A deliberately extreme stress test. Every single day of the experiment is treated as
+								low-sunlight as the single worst day in the pulled data. Real deployments almost
+								never see this, but a system that survives it will survive anything in that sample.
 							</dd>
 						</div>
 
@@ -1612,8 +1801,8 @@
 								A public NASA dataset providing hourly historical solar and meteorological data
 								anywhere on Earth. This calculator queries the
 								<span class="font-mono text-[#aaa]">ALLSKY_SFC_SW_DWN</span> parameter (all-sky surface
-								shortwave downward irradiance) for the three most recent complete years in the same
-								seasonal window as the user's date range.
+								shortwave downward irradiance) for the three most recent complete years in the same seasonal
+								window as the user's date range.
 							</dd>
 						</div>
 					</dl>

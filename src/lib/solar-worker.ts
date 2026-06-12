@@ -22,76 +22,45 @@ function simulateHistory(netLoad: number[], totalCapacityWh: number): number[] {
 
 self.onmessage = (e: MessageEvent) => {
 	const {
-		devices,
-		numDays,
-		numWorstDays,
-		solarAvg,
-		solarWorst,
-		numPanels,
+		irradianceSeq,
 		panelRatingW,
+		numPanels,
 		solarEfficiency,
 		circuitEfficiency,
-		batteryCapacity,
-		batteriesWithoutSolar,
+		devices,
 		devicePowerW,
 		safetyMargin
 	}: {
-		devices: number;
-		numDays: number;
-		numWorstDays: number;
-		solarAvg: number[];
-		solarWorst: number[];
-		numPanels: number;
+		irradianceSeq: number[]; // one irradiance value (Wh/m^2) per hour of the run
 		panelRatingW: number;
+		numPanels: number;
 		solarEfficiency: number;
 		circuitEfficiency: number;
-		batteryCapacity: number;
-		batteriesWithoutSolar: number;
+		devices: number;
 		devicePowerW: number;
 		safetyMargin: number;
 	} = e.data;
 
-	// Circuit/discharge loss: the battery must supply more than the raw device load.
+	// Load the battery must supply each hour (includes safety margin + circuit loss).
 	const hourlyLoad = (devices * devicePowerW * safetyMargin) / circuitEfficiency;
-	const numAvgDays = numDays - numWorstDays;
 
-	// Precompute net load: positive = battery drains, negative = battery charges
-	// Solar output (Wh) = irradiance (kWh/m²) * panelRatingW * numPanels * solarEfficiency
-	const netLoad: number[] = [];
-	for (let d = 0; d < numAvgDays; d++) {
-		for (let h = 0; h < 24; h++) {
-			netLoad.push(hourlyLoad - (solarAvg[h] / 1000) * panelRatingW * numPanels * solarEfficiency);
-		}
+	// Net load per hour: positive drains the battery, negative charges it.
+	// Solar output (Wh) = (irradiance / 1000) * panelRatingW * numPanels * solarEfficiency
+	const netLoad = irradianceSeq.map(
+		(irr) => hourlyLoad - (irr / 1000) * panelRatingW * numPanels * solarEfficiency
+	);
+
+	// Smallest battery capacity (Wh) that keeps the charge from hitting zero.
+	// Monotonic in capacity, so a continuous binary search is valid.
+	let lo = 0;
+	let hi = 1;
+	while (!simulate(netLoad, hi)) hi *= 2;
+	for (let i = 0; i < 60; i++) {
+		const mid = (lo + hi) / 2;
+		if (simulate(netLoad, mid)) hi = mid;
+		else lo = mid;
 	}
-	for (let d = 0; d < numWorstDays; d++) {
-		for (let h = 0; h < 24; h++) {
-			netLoad.push(
-				hourlyLoad - (solarWorst[h] / 1000) * panelRatingW * numPanels * solarEfficiency
-			);
-		}
-	}
-
-	// Lower bound: minimum batteries assuming perfect storage (no ceiling losses)
-	const totalSolarWh =
-		solarAvg.reduce((s, v) => s + v, 0) * panelRatingW * numPanels * solarEfficiency * numDays;
-	const totalLoadWh = hourlyLoad * 24 * numDays;
-	const lowerBound = Math.max(1, Math.ceil((totalLoadWh - totalSolarWh) / batteryCapacity));
-
-	// Binary search over [lowerBound, batteriesWithoutSolar]
-	let lo = lowerBound;
-	let hi = batteriesWithoutSolar;
-	let result = hi;
-
-	while (lo <= hi) {
-		const mid = Math.floor((lo + hi) / 2);
-		if (simulate(netLoad, mid * batteryCapacity)) {
-			result = mid;
-			hi = mid - 1;
-		} else {
-			lo = mid + 1;
-		}
-	}
-
-	const chargeHistory = simulateHistory(netLoad, result * batteryCapacity);
-	self.postMessage({ batteries: result, chargeHistory });
+	const minCapacityWh = hi;
+	const chargeHistory = simulateHistory(netLoad, minCapacityWh);
+	self.postMessage({ minCapacityWh, chargeHistory });
 };
