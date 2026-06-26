@@ -427,7 +427,7 @@
 	>
 {/snippet}
 
-<div class="min-h-screen bg-[#0f0f0f] px-4 py-8 text-[#e8e8e8]">
+<div class="min-h-screen bg-[#0f0f0f] px-4 pt-14 pb-8 text-[#e8e8e8]">
 	<div class="mx-auto max-w-2xl space-y-8">
 		<!-- ── Header ─────────────────────────────────────────────────────────── -->
 		<header
